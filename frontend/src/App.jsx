@@ -107,7 +107,7 @@ function App() {
           originalRequest._retry = true
           try {
             const refreshToken = localStorage.getItem('refresh_token')
-            const response = await api.post('/api/v1/auth/refresh', { refresh_token: refreshToken })
+            const response = await api.post('/auth/refresh', { refresh_token: refreshToken })
             localStorage.setItem('access_token', response.data.access_token)
             originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`
             return api(originalRequest)

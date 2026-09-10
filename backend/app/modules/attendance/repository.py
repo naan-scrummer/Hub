@@ -102,4 +102,5 @@ class AttendanceRepository:
             "total_classes": total_classes,
             "overall_percentage": round(overall_percentage, 2),
             "subjects_count": subject_count or 0,
+            "records": [],
         }

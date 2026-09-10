@@ -23,6 +23,21 @@ class Base(DeclarativeBase):
     pass
 
 
+# Register every model before SQLAlchemy configures relationships.
+from app.integrations.college_portal.models import SyncRun  # noqa: E402,F401
+from app.modules.academics.models import AcademicRecord  # noqa: E402,F401
+from app.modules.announcements.models import Announcement, AnnouncementSource  # noqa: E402,F401
+from app.modules.assignments.models import Assignment  # noqa: E402,F401
+from app.modules.attendance.models import AttendanceRecord, Subject  # noqa: E402,F401
+from app.modules.authentication.models import StudentProfile, User  # noqa: E402,F401
+from app.modules.dashboard.models import DashboardWidget  # noqa: E402,F401
+from app.modules.examinations.models import Examination  # noqa: E402,F401
+from app.modules.notifications.models import Notification  # noqa: E402,F401
+from app.modules.placements.models import Company, PlacementContribution, PlacementOpportunity  # noqa: E402,F401
+from app.modules.reminders.models import Reminder  # noqa: E402,F401
+from app.modules.study_materials.models import StudyMaterial  # noqa: E402,F401
+
+
 async def get_db() -> AsyncSession:
     async with async_session_maker() as session:
         try:

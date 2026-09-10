@@ -1,4 +1,5 @@
 import sys
+import logging
 import structlog
 from structlog.types import EventDict
 from app.core.config import get_settings
@@ -14,7 +15,7 @@ def add_app_context(logger: structlog.BoundLogger, method_name: str, event_dict:
 
 
 def setup_logging() -> None:
-    log_level = getattr(structlog, settings.LOG_LEVEL.upper(), structlog.INFO)
+    log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
     structlog.configure(
         processors=[
@@ -34,7 +35,6 @@ def setup_logging() -> None:
         cache_logger_on_first_use=True,
     )
 
-    import logging
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,

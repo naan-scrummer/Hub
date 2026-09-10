@@ -68,7 +68,11 @@ export function StudyMaterialsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await studyMaterialsApi.get({ query: searchQuery, material_type: typeFilter === 'all' ? undefined : typeFilter, subject_id: subjectFilter })
+        const res = await studyMaterialsApi.get({
+          query: searchQuery,
+          material_type: typeFilter === 'all' ? undefined : typeFilter,
+          subject_id: subjectFilter || undefined,
+        })
         setMaterials(res.data.materials || [])
       } catch (err) {
         setError(err.message)

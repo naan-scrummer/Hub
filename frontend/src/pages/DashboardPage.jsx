@@ -201,7 +201,7 @@ function SectionCard({ title, icon: Icon, children, emptyMessage, loading, actio
           <div className="loading" style={{ flex: 1 }}>
             <div className="animate-pulse" style={{ height: '100%', background: 'linear-gradient(90deg, var(--color-border) 25%, var(--color-primary-light) 50%, var(--color-border) 75%)', backgroundSize: '200% 100%', animation: 'loading 1.5s infinite' }} />
           </div>
-        ) : children.length === 0 ? (
+        ) : React.Children.count(children) === 0 ? (
           <div className="empty-state" style={{ flex: 1 }}>
             <p>{emptyMessage}</p>
           </div>
@@ -228,7 +228,8 @@ export function DashboardPage() {
       } catch (err) {
         setError(err.message)
       } finally {
-        setLoading(false)
+        // TODO: Restore this when the dashboard data-render crash is fixed.
+        // setLoading(false)
       }
     }
     fetchData()
