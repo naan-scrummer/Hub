@@ -13,7 +13,6 @@ from app.schemas.assignments import (
     AssignmentUpdateRequest,
     AssignmentResponse,
     AssignmentListResponse,
-    AssignmentStatus,
 )
 from app.modules.authentication.models import StudentProfile
 from app.logging.config import get_logger
@@ -53,7 +52,7 @@ async def get_assignments(
                 title=a.title,
                 description=a.description,
                 due_date=a.due_date,
-                status=a.status,
+                status=assignment_service.classify_status(a),
                 completed_at=a.completed_at,
                 created_at=a.created_at,
                 updated_at=a.updated_at,
@@ -92,7 +91,7 @@ async def create_assignment(
         title=assignment.title,
         description=assignment.description,
         due_date=assignment.due_date,
-        status=assignment.status,
+        status=assignment_service.classify_status(assignment),
         completed_at=assignment.completed_at,
         created_at=assignment.created_at,
         updated_at=assignment.updated_at,
@@ -116,11 +115,6 @@ async def update_assignment(
         assignment.description = request.description
     if request.due_date is not None:
         assignment.due_date = request.due_date
-    if request.status is not None:
-        assignment.status = request.status
-        if request.status == AssignmentStatus.COMPLETED:
-            from datetime import datetime
-            assignment.completed_at = datetime.utcnow()
 
     assignment = await assignment_service.update(assignment)
 
@@ -135,7 +129,7 @@ async def update_assignment(
         title=assignment.title,
         description=assignment.description,
         due_date=assignment.due_date,
-        status=assignment.status,
+        status=assignment_service.classify_status(assignment),
         completed_at=assignment.completed_at,
         created_at=assignment.created_at,
         updated_at=assignment.updated_at,
@@ -163,7 +157,7 @@ async def complete_assignment(
         title=assignment.title,
         description=assignment.description,
         due_date=assignment.due_date,
-        status=assignment.status,
+        status=assignment_service.classify_status(assignment),
         completed_at=assignment.completed_at,
         created_at=assignment.created_at,
         updated_at=assignment.updated_at,
@@ -204,7 +198,7 @@ async def get_assignments_by_subject(
             title=a.title,
             description=a.description,
             due_date=a.due_date,
-            status=a.status,
+            status=assignment_service.classify_status(a),
             completed_at=a.completed_at,
             created_at=a.created_at,
             updated_at=a.updated_at,

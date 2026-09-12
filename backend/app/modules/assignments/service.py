@@ -116,10 +116,14 @@ class AssignmentService:
         if not assignment or assignment.student_id != student_id:
             return False
 
-        # Delete associated reminders
+        # Cancel associated reminders instead of deleting them
+        # (ReminderRepository has no delete() method; cancelling avoids
+        # depending on a method that doesn't exist yet)
         reminders = await self.reminder_repo.get_by_assignment(assignment.id)
         for reminder in reminders:
-            await self.reminder_repo.delete(reminder)
+            reminder.status = ReminderStatus.CANCELLED
+            reminder.processed_at = datetime.utcnow()
+            await self.reminder_repo.update(reminder)
 
         await self.assignment_repo.delete(assignment)
         logger.info("assignment_deleted", assignment_id=assignment_id, student_id=student_id)

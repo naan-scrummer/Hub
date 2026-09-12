@@ -21,7 +21,7 @@ class AssignmentUpdateRequest(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     due_date: Optional[datetime] = None
-    status: Optional[AssignmentStatus] = None
+    
 
 
 class AssignmentResponse(BaseModel):
