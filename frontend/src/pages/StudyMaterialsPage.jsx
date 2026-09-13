@@ -47,7 +47,20 @@ function MaterialCard({ material }) {
           </span>
         )}
         {!material.external_url && !material.file_path && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>No file attached</span>
+          <span
+            className="btn btn-outline btn-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              color: 'var(--color-danger)',
+              borderColor: 'var(--color-danger)',
+              cursor: 'not-allowed',
+            }}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Resource unavailable
+          </span>
         )}
         <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
           {formatDistanceToNow(new Date(material.created_at), { addSuffix: true })}
