@@ -10,6 +10,9 @@ class ReminderRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: Reminder):
+        return select(parameter)
+
     async def get_by_id(self, reminder_id: int) -> Optional[Reminder]:
         result = await self.session.execute(select(Reminder).where(Reminder.id == reminder_id))
         return result.scalar_one_or_none()

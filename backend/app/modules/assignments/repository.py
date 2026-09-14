@@ -10,6 +10,9 @@ class AssignmentRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: Assignment):
+        return select(parameter)
+
     async def get_by_id(self, assignment_id: int) -> Optional[Assignment]:
         result = await self.session.execute(select(Assignment).where(Assignment.id == assignment_id))
         return result.scalar_one_or_none()

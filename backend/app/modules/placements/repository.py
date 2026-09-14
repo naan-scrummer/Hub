@@ -9,6 +9,9 @@ class CompanyRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: Company):
+        return select(parameter)
+
     async def get_by_id(self, company_id: int) -> Optional[Company]:
         result = await self.session.execute(select(Company).where(Company.id == company_id))
         return result.scalar_one_or_none()
@@ -38,6 +41,9 @@ class CompanyRepository:
 class PlacementOpportunityRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    def select(self, parameter: PlacementOpportunity):
+        return select(parameter)
 
     async def get_by_id(self, opportunity_id: int) -> Optional[PlacementOpportunity]:
         result = await self.session.execute(select(PlacementOpportunity).where(PlacementOpportunity.id == opportunity_id))
@@ -88,6 +94,9 @@ class PlacementOpportunityRepository:
 class PlacementContributionRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    def select(self, parameter: PlacementContribution):
+        return select(parameter)
 
     async def get_by_id(self, contribution_id: int) -> Optional[PlacementContribution]:
         result = await self.session.execute(select(PlacementContribution).where(PlacementContribution.id == contribution_id))

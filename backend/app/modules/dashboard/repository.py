@@ -9,6 +9,9 @@ class DashboardWidgetRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: DashboardWidget):
+        return select(parameter)
+
     async def get_by_student(self, student_id: int) -> List[DashboardWidget]:
         result = await self.session.execute(
             select(DashboardWidget).where(DashboardWidget.student_id == student_id).order_by(DashboardWidget.position)

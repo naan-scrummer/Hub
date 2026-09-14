@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.db.base import init_db, close_db
+from app.seed import seed_data 
 from app.logging.config import setup_logging, get_logger
 from app.jobs.scheduler import job_scheduler
 from app.api.routes import (
@@ -31,6 +32,10 @@ async def lifespan(app: FastAPI):
     logger.info("application_starting", env=settings.APP_ENV)
 
     await init_db()
+
+    if settings.APP_ENV == "development":
+        await seed_data()
+
     logger.info("database_initialized")
 
     job_scheduler.start()

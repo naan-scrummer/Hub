@@ -10,6 +10,9 @@ class ExaminationRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: Examination):
+        return select(parameter)
+
     async def get_by_id(self, exam_id: int) -> Optional[Examination]:
         result = await self.session.execute(select(Examination).where(Examination.id == exam_id))
         return result.scalar_one_or_none()

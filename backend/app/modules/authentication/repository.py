@@ -9,6 +9,9 @@ class UserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: User):
+        return select(parameter)
+
     async def get_by_id(self, user_id: int) -> Optional[User]:
         result = await self.session.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
@@ -32,6 +35,9 @@ class UserRepository:
 class StudentProfileRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    def select(self, parameter: StudentProfile):
+        return select(parameter)
 
     async def get_by_id(self, profile_id: int) -> Optional[StudentProfile]:
         result = await self.session.execute(select(StudentProfile).where(StudentProfile.id == profile_id))

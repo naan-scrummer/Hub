@@ -10,6 +10,9 @@ class AnnouncementSourceRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: AnnouncementSource):
+        return select(parameter)
+
     async def get_by_id(self, source_id: int) -> Optional[AnnouncementSource]:
         result = await self.session.execute(select(AnnouncementSource).where(AnnouncementSource.id == source_id))
         return result.scalar_one_or_none()
@@ -39,6 +42,9 @@ class AnnouncementSourceRepository:
 class AnnouncementRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    def select(self, parameter: Announcement):
+        return select(parameter)
 
     async def get_by_id(self, announcement_id: int) -> Optional[Announcement]:
         result = await self.session.execute(select(Announcement).where(Announcement.id == announcement_id))

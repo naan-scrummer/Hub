@@ -9,6 +9,9 @@ class StudyMaterialRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: StudyMaterial):
+        return select(parameter)
+
     async def get_by_id(self, material_id: int) -> Optional[StudyMaterial]:
         result = await self.session.execute(select(StudyMaterial).where(StudyMaterial.id == material_id))
         return result.scalar_one_or_none()

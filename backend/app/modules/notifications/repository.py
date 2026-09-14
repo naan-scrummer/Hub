@@ -9,6 +9,9 @@ class NotificationRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def select(self, parameter: Notification):
+        return select(parameter)
+
     async def get_by_id(self, notification_id: int) -> Optional[Notification]:
         result = await self.session.execute(select(Notification).where(Notification.id == notification_id))
         return result.scalar_one_or_none()
