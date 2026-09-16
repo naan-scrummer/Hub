@@ -21,7 +21,7 @@ from app.modules.study_materials.models import StudyMaterial
 from app.modules.study_materials.repository import StudyMaterialRepository
 from app.modules.assignments.models import Assignment, AssignmentStatus
 from app.modules.assignments.repository import AssignmentRepository
-from app.modules.reminders.models import Reminder, ReminderTriggerType, ReminderStatus
+from app.modules.reminders.models import Reminder, ReminderTriggerType, ReminderOrigin, ReminderStatus
 from app.modules.reminders.repository import ReminderRepository
 from app.modules.notifications.models import Notification, NotificationSource, NotificationStatus
 from app.modules.notifications.repository import NotificationRepository
@@ -316,34 +316,113 @@ async def seed_data():
 
         logger.info("assignments_seeded", count=len(assignments))
 
-        # Create reminders
-        reminders_data = [
-            (assignments[0].id, None, "Database Design Project Due Tomorrow", "Reminder for assignment 'Database Design Project' due in 1 day", ReminderTriggerType.ASSIGNMENT_DUE, assignments[0].due_date - timedelta(days=1), ReminderStatus.PENDING),
-            (assignments[1].id, None, "Network Simulation Lab Overdue", "Reminder for overdue assignment 'Network Simulation Lab'", ReminderTriggerType.ASSIGNMENT_DUE, assignments[1].due_date - timedelta(days=1), ReminderStatus.PROCESSED),
-            (None, exams[0].id if 'exams' in locals() else None, "CS301 Midterm in 3 Days", "Midterm examination for Database Systems in 3 days", ReminderTriggerType.EXAMINATION, now + timedelta(days=4), ReminderStatus.PENDING),
-            (None, None, "Study Group Meeting", "Weekly study group meeting at library", ReminderTriggerType.CUSTOM, now + timedelta(days=2), ReminderStatus.PENDING),
-        ]
-
-        # Get exams for reminder
-        exams = await session.execute(
+        # Fetch exams for reminder references
+        exams_result = await session.execute(
             exam_repo.select(Examination).where(Examination.subject_id == subjects[0].id)
         )
-        exams_list = list(exams.scalars().all())
+        exams_list = list(exams_result.scalars().all())
 
-        for i, (assignment_id, exam_id, title, desc, trigger_type, trigger_time, status) in enumerate(reminders_data):
-            if i == 2 and exams_list:
-                exam_id = exams_list[0].id
+        # Create reminders — mix of AUTOMATIC and CUSTOM origins, different statuses
+        reminders_data = [
+            # AUTOMATIC reminders (system-generated, 7 days before event)
+            {
+                "assignment_id": assignments[0].id,
+                "examination_id": None,
+                "title": "Due soon: Database Design Project",
+                "description": "Automatic reminder: Database Design Project due in 5 days",
+                "trigger_type": ReminderTriggerType.ASSIGNMENT_DUE,
+                "trigger_time": assignments[0].due_date - timedelta(days=7),
+                "origin": ReminderOrigin.AUTOMATIC,
+                "status": ReminderStatus.PENDING,
+            },
+            {
+                "assignment_id": assignments[2].id,
+                "examination_id": None,
+                "title": "Due soon: OS Process Scheduling",
+                "description": "Automatic reminder: OS Process Scheduling due in 10 days",
+                "trigger_type": ReminderTriggerType.ASSIGNMENT_DUE,
+                "trigger_time": assignments[2].due_date - timedelta(days=7),
+                "origin": ReminderOrigin.AUTOMATIC,
+                "status": ReminderStatus.PENDING,
+            },
+            {
+                "assignment_id": None,
+                "examination_id": exams_list[0].id if exams_list else None,
+                "title": "Exam soon: Database Systems - Midterm",
+                "description": "Automatic reminder: Database Systems - Midterm in 7 days",
+                "trigger_type": ReminderTriggerType.EXAMINATION,
+                "trigger_time": (now + timedelta(days=7)) - timedelta(days=7),
+                "origin": ReminderOrigin.AUTOMATIC,
+                "status": ReminderStatus.PENDING,
+            },
+            # AUTOMATIC reminder that was already processed (for completed assignment)
+            {
+                "assignment_id": assignments[1].id,
+                "examination_id": None,
+                "title": "Due soon: Network Simulation Lab",
+                "description": "Automatic reminder: Network Simulation Lab (already overdue)",
+                "trigger_type": ReminderTriggerType.ASSIGNMENT_DUE,
+                "trigger_time": assignments[1].due_date - timedelta(days=7),
+                "origin": ReminderOrigin.AUTOMATIC,
+                "status": ReminderStatus.PROCESSED,
+                "processed_at": now - timedelta(days=3),
+            },
+            # CUSTOM reminders (user-created)
+            {
+                "assignment_id": None,
+                "examination_id": None,
+                "title": "Study Group Meeting",
+                "description": "Weekly study group meeting at library — bring notes",
+                "trigger_type": ReminderTriggerType.CUSTOM,
+                "trigger_time": now + timedelta(days=2, hours=14),
+                "origin": ReminderOrigin.CUSTOM,
+                "status": ReminderStatus.PENDING,
+            },
+            {
+                "assignment_id": None,
+                "examination_id": None,
+                "title": "Submit internship application",
+                "description": "Deadline for TechCorp summer internship application",
+                "trigger_type": ReminderTriggerType.CUSTOM,
+                "trigger_time": now + timedelta(days=7, hours=9),
+                "origin": ReminderOrigin.CUSTOM,
+                "status": ReminderStatus.PENDING,
+            },
+            {
+                "assignment_id": assignments[3].id,
+                "examination_id": None,
+                "title": "Review Graph Theory solutions",
+                "description": "Review solutions for completed Graph Theory assignment",
+                "trigger_type": ReminderTriggerType.ASSIGNMENT_DUE,
+                "trigger_time": now - timedelta(days=5),
+                "origin": ReminderOrigin.CUSTOM,
+                "status": ReminderStatus.CANCELLED,
+            },
+            {
+                "assignment_id": None,
+                "examination_id": exams_list[0].id if exams_list else None,
+                "title": "Pre-exam prep: Database Systems",
+                "description": "Start preparing for Database Systems midterm",
+                "trigger_type": ReminderTriggerType.EXAMINATION,
+                "trigger_time": now - timedelta(days=1),
+                "origin": ReminderOrigin.CUSTOM,
+                "status": ReminderStatus.PROCESSED,
+                "processed_at": now - timedelta(days=1),
+            },
+        ]
 
+        for data in reminders_data:
             reminder = Reminder(
                 student_id=demo_profile.id,
-                assignment_id=assignment_id,
-                examination_id=exam_id,
-                title=title,
-                description=desc,
-                trigger_type=trigger_type,
-                trigger_time=trigger_time,
-                status=status,
-                processed_at=datetime.utcnow() if status == ReminderStatus.PROCESSED else None,
+                assignment_id=data["assignment_id"],
+                examination_id=data["examination_id"],
+                title=data["title"],
+                description=data["description"],
+                trigger_type=data["trigger_type"],
+                trigger_time=data["trigger_time"],
+                origin=data["origin"],
+                status=data["status"],
+                processed_at=data.get("processed_at"),
             )
             await reminder_repo.create(reminder)
 

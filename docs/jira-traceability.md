@@ -45,10 +45,10 @@
 | SCRUM03-F009-UI-002 | Upcoming/overdue views | Frontend | AssignmentsPage tabs | Manual | Implemented |
 | SCRUM03-F009-REL-001 | Assignment→Reminder | Backend | AssignmentService.create() creates reminder | test_e2e_workflows.py | Implemented |
 | SCRUM03-F009-REL-002 | Completion→Reminder | Backend | AssignmentService.mark_completed() cancels reminders | test_e2e_workflows.py | Implemented |
-| SCRUM03-F010 | Reminders | Backend | ReminderService, ReminderRepository | test_api.py | Implemented |
-| SCRUM03-F010-UI-001 | Reminder management | Frontend | RemindersPage component | Manual | Implemented |
-| SCRUM03-F010-BE-001 | Reminder scheduling | Backend | ReminderService.process_due_reminders | test_services.py | Implemented |
-| SCRUM03-F010-JOB-001 | Background processing | Backend | JobScheduler, process_reminders_job | - | Implemented |
+| SCRUM03-F010 | Reminders | Backend | ReminderService, ReminderRepository, Reminder model with origin field | test_services.py (8 tests) | Implemented |
+| SCRUM03-F010-UI-001 | Reminder management | Frontend | RemindersPage.jsx, remindersService.js, tab filters, context badges, create/edit modals | Manual | Implemented |
+| SCRUM03-F010-BE-001 | Reminder scheduling | Backend | ReminderService: create_reminder, create_automatic_reminder, get_student_reminders, update_reminder, cancel_linked_reminders, process_due_reminders | test_services.py (8 tests) | Implemented |
+| SCRUM03-F010-JOB-001 | Background processing | Backend | JobScheduler.process_reminders_job (60s interval, atomic state transition, exception-safe) | test_services.py | Implemented |
 | SCRUM03-F011 | Notifications | Backend | NotificationService, NotificationRepository | test_api.py, test_services.py | Implemented |
 | SCRUM03-F011-UI-001 | Notifications center | Frontend | NotificationsPage component | Manual | Implemented |
 | SCRUM03-F011-BE-001 | Notification generation | Backend | NotificationService, ReminderService integration | test_services.py | Implemented |

@@ -76,8 +76,14 @@ export const assignmentsApi = {
 }
 
 export const remindersApi = {
-  get: () => api.get('/reminders'),
+  get: (status = null) => {
+    const params = status ? { status } : {};
+    return api.get('/reminders', { params });
+  },
+  getById: (id) => api.get(`/reminders/${id}`),
   create: (data) => api.post('/reminders', data),
+  update: (id, data) => api.patch(`/reminders/${id}`, data),
+  delete: (id) => api.delete(`/reminders/${id}`),
   process: () => api.post('/reminders/process'),
 }
 
