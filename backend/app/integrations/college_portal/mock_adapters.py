@@ -88,6 +88,13 @@ class MockCollegePortalClient(CollegePortalClient):
                 "category": "event",
                 "published_at": now - timedelta(days=10),
             },
+            {
+                "source_reference": None,
+                "title": "Unreferenced Notice without Timestamp",
+                "content": "This notice tests missing metadata handling.",
+                "category": "administrative",
+                "published_at": None,
+            },
         ]
 
     async def fetch_placements(self) -> List[dict]:
@@ -246,11 +253,11 @@ class MockAnnouncementPortalAdapter(AnnouncementPortalAdapter):
             announcements.append(
                 Announcement(
                     source_id=source.id,
-                    source_reference=item["source_reference"],
-                    title=item["title"],
-                    content=item["content"],
-                    category=item["category"],
-                    published_at=item["published_at"],
+                    source_reference=item.get("source_reference"),
+                    title=item.get("title", "Untitled Announcement"),
+                    content=item.get("content", ""),
+                    category=item.get("category", "general"),
+                    published_at=item.get("published_at"),
                     source_sync_run_id=sync_run_id,
                 )
             )
