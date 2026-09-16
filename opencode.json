@@ -6,7 +6,8 @@
       "secrets/**",
       "dist/**",
       "coverage/**",
-      "prompts-localonly/"
+      "prompts-localonly/**",
+      "archive/**"
     ]
   }
 }
