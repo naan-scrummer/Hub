@@ -100,7 +100,9 @@ class AnnouncementRepository:
         return announcement
 
     async def bulk_upsert(self, announcements: List[Announcement]) -> List[Announcement]:
+        saved_announcements = []
         for announcement in announcements:
+            existing_ann = None
             if announcement.source_reference:
                 existing = await self.session.execute(
                     select(Announcement).where(
@@ -109,18 +111,35 @@ class AnnouncementRepository:
                     )
                 )
                 existing_ann = existing.scalar_one_or_none()
-                if existing_ann:
-                    existing_ann.title = announcement.title
-                    existing_ann.content = announcement.content
-                    existing_ann.category = announcement.category
-                    existing_ann.published_at = announcement.published_at
-                    existing_ann.source_sync_run_id = announcement.source_sync_run_id
-                    continue
+            else:
+                # Deterministic fallback when source_reference is missing
+                query = select(Announcement).where(
+                    Announcement.source_id == announcement.source_id,
+                    Announcement.title == announcement.title,
+                )
+                if announcement.published_at:
+                    query = query.where(Announcement.published_at == announcement.published_at)
+                else:
+                    query = query.where(Announcement.published_at.is_(None))
+                
+                existing = await self.session.execute(query)
+                existing_ann = existing.scalars().first()
+
+            if existing_ann:
+                existing_ann.title = announcement.title
+                existing_ann.content = announcement.content
+                existing_ann.category = announcement.category
+                existing_ann.published_at = announcement.published_at
+                existing_ann.source_sync_run_id = announcement.source_sync_run_id
+                saved_announcements.append(existing_ann)
+                continue
+            
             self.session.add(announcement)
+            saved_announcements.append(announcement)
         await self.session.flush()
-        for ann in announcements:
+        for ann in saved_announcements:
             await self.session.refresh(ann)
-        return announcements
+        return saved_announcements
 
     async def count_total(self) -> int:
         result = await self.session.execute(select(func.count(Announcement.id)))

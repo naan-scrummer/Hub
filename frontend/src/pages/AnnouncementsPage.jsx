@@ -6,7 +6,7 @@ import { Megaphone, RefreshCw, AlertTriangle, Loader2, Filter, ChevronDown } fro
 const categories = ['all', 'examination', 'administrative', 'event', 'department', 'academic']
 
 function AnnouncementCard({ announcement }) {
-  const pubDate = new Date(announcement.published_at)
+  const pubDate = announcement.published_at ? new Date(announcement.published_at) : null
   return (
     <div className="card" style={{ padding: '1.25rem' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
@@ -17,7 +17,7 @@ function AnnouncementCard({ announcement }) {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
             <h3 style={{ fontWeight: 600, color: 'var(--color-text)' }}>{announcement.title}</h3>
             <time style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-              {formatDistanceToNow(pubDate, { addSuffix: true })}
+              {pubDate ? formatDistanceToNow(pubDate, { addSuffix: true }) : 'Date Unknown'}
             </time>
           </div>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>{announcement.content}</p>

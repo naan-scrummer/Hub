@@ -23,7 +23,7 @@ class AnnouncementResponse(BaseModel):
     title: str
     content: str
     category: str
-    published_at: datetime
+    published_at: Optional[datetime]
     is_unavailable: bool = False
 
     class Config:
