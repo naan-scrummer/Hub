@@ -1,5 +1,8 @@
 # harishr-mit
 prompts-localonly/
+AGENTS.md
+opencode.json
+OPENCODE_MULTI_AGENT_IMPLEMENTATION.md
 
 # Node / frontend
 node_modules/
