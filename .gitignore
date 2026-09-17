@@ -1,8 +1,10 @@
 # harishr-mit
 prompts-localonly/
-# OPENCODE_MULTI_AGENT_IMPLEMENTATION.md
-# opencode.json
-# AGENTS.md
+archive/OPENCODE_MULTI_AGENT_IMPLEMENTATION.md
+settings.json
+AGENTS.md
+.agents/
+.antigravity-state.md
 
 # Node / frontend
 node_modules/
@@ -54,7 +56,7 @@ credentials.json
 # IDE / editor / local tool metadata
 .vscode/
 .idea/
-# .opencode/
+.opencode/
 githubCopilot/
 .DS_Store
 Thumbs.db
