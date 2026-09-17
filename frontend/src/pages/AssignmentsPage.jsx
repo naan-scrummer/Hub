@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { assignmentsApi } from '../services/api'
-import { studyMaterialsApi } from '../services/api'
+import { assignmentsApi, attendanceApi } from '../services/api'
 import { format, formatDistanceToNow } from 'date-fns'
 import { ClipboardList, Plus, AlertTriangle, Loader2, CheckCircle, Clock, Trash2, Edit2, ExternalLink, Calendar, BookOpen } from 'lucide-react'
 
@@ -196,17 +195,10 @@ export function AssignmentsPage() {
       try {
         const [assignRes, subjectRes] = await Promise.all([
           assignmentsApi.get(),
-          studyMaterialsApi.get({}), // We'll reuse subjects from elsewhere or create a separate call
+          attendanceApi.getSubjects(),
         ])
         setAssignments(assignRes.data)
-        // For now, use mock subjects
-        setSubjects([
-          {id: 1, code: 'CS301', name: 'Database Systems'},
-          {id: 2, code: 'CS302', name: 'Computer Networks'},
-          {id: 3, code: 'CS303', name: 'Operating Systems'},
-          {id: 4, code: 'MA201', name: 'Discrete Mathematics'},
-          {id: 5, code: 'CS304', name: 'Software Engineering'},
-        ])
+        setSubjects(subjectRes.data)
       } catch (err) {
         setError(err.message)
       } finally {
