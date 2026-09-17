@@ -16,8 +16,8 @@ async def test_e2e_assignment_reminder_notification_flow(client):
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Create assignment with due date tomorrow
-    due_date = (datetime.utcnow() + timedelta(days=1)).isoformat()
+    # Create assignment with due date tomorrow + 1 second
+    due_date = (datetime.utcnow() + timedelta(days=1, seconds=1)).isoformat()
     create_response = await client.post("/api/v1/assignments", headers=headers, json={
         "subject_id": 1,
         "title": "E2E Test Assignment",
@@ -43,6 +43,8 @@ async def test_e2e_assignment_reminder_notification_flow(client):
     assert reminder["trigger_type"] == "assignment_due"
 
     # Process reminders (simulate background job)
+    import asyncio
+    await asyncio.sleep(1.1)
     process_response = await client.post("/api/v1/reminders/process", headers=headers)
     assert process_response.status_code == 200
 
@@ -225,3 +227,53 @@ async def test_placement_contributions(client):
     assert my_contrib_response.status_code == 200
     my_contrib_data = my_contrib_response.json()
     assert len(my_contrib_data["contributions"]) == 1
+
+@pytest.mark.asyncio
+async def test_assignment_due_date_update_updates_reminder(client):
+    """AC2: Changing assignment due date updates reminder trigger time"""
+    login_response = await client.post("/api/v1/auth/login", json={
+        "email": "student@demo.edu",
+        "password": "demo123"
+    })
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Create assignment with due date tomorrow
+    original_due_date_dt = datetime.utcnow() + timedelta(days=1, hours=2)
+    original_due_date = original_due_date_dt.isoformat()
+    create_response = await client.post("/api/v1/assignments", headers=headers, json={
+        "subject_id": 1,
+        "title": "Update Test Assignment",
+        "description": "Test assignment for AC2 update flow",
+        "due_date": original_due_date
+    })
+    assert create_response.status_code == 200
+    assignment = create_response.json()
+    assignment_id = assignment["id"]
+
+    # Verify reminder is created for original due date
+    reminders_response = await client.get("/api/v1/reminders", headers=headers)
+    assert reminders_response.status_code == 200
+    assignment_reminders = [r for r in reminders_response.json() if r.get("assignment_id") == assignment_id]
+    assert len(assignment_reminders) > 0
+    original_reminder = assignment_reminders[0]
+    assert original_reminder["status"] == "pending"
+
+    # Update assignment due date to tomorrow + 2 days
+    new_due_date_dt = original_due_date_dt + timedelta(days=2)
+    new_due_date = new_due_date_dt.isoformat()
+    update_response = await client.patch(f"/api/v1/assignments/{assignment_id}", headers=headers, json={
+        "due_date": new_due_date
+    })
+    assert update_response.status_code == 200
+
+    # Verify reminder trigger time was updated
+    reminders_response2 = await client.get("/api/v1/reminders", headers=headers)
+    assert reminders_response2.status_code == 200
+    assignment_reminders2 = [r for r in reminders_response2.json() if r.get("assignment_id") == assignment_id]
+    assert len(assignment_reminders2) > 0
+    updated_reminder = assignment_reminders2[0]
+    assert updated_reminder["status"] == "pending"
+
+    assert updated_reminder["trigger_time"] > original_reminder["trigger_time"]
+    assert updated_reminder["id"] == original_reminder["id"]

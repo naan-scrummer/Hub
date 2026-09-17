@@ -37,7 +37,8 @@ async def test_session(test_engine):
         # Patch async_session_maker temporarily to seed into this test engine
         from unittest.mock import patch
         with patch("app.seed.async_session_maker", async_session):
-            await seed_data()
+           await seed_data(session)
+        
         yield session
 
 
