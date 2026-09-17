@@ -6,6 +6,7 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base, get_db
 from app.main import app
 from app.core.config import Settings
+from app.seed import seed_data
 from httpx import AsyncClient, ASGITransport
 
 
@@ -33,6 +34,7 @@ async def test_engine():
 async def test_session(test_engine):
     async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
+        await seed_data(session)
         yield session
 
 

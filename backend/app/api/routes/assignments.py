@@ -115,7 +115,8 @@ async def update_assignment(
     assignment = await assignment_service.get_by_id(assignment_id)
     if not assignment or assignment.student_id != profile.id:
         raise HTTPException(status_code=404, detail="Assignment not found")
-
+    if request.subject_id is not None:
+        assignment.subject_id = request.subject_id
     if request.title is not None:
         assignment.title = request.title
     if request.description is not None:

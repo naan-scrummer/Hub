@@ -18,6 +18,7 @@ class AssignmentCreateRequest(BaseModel):
 
 
 class AssignmentUpdateRequest(BaseModel):
+    subject_id: Optional[int] = None
     title: Optional[str] = None
     description: Optional[str] = None
     due_date: Optional[datetime] = None

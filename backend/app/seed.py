@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
+from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,8 +32,17 @@ from app.logging.config import get_logger
 logger = get_logger(__name__)
 
 
-async def seed_data():
-    async with async_session_maker() as session:
+@asynccontextmanager
+async def _get_session(session: AsyncSession | None):
+    if session is not None:
+        yield session
+    else:
+        async with async_session_maker() as s:
+            yield s
+
+
+async def seed_data(session: AsyncSession | None = None):
+    async with _get_session(session) as session:
         # Initialize repositories
         user_repo = UserRepository(session)
         profile_repo = StudentProfileRepository(session)
