@@ -1,7 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import { notificationsApi } from '../services/api'
+import { notificationsService } from '../services/notificationsService'
 import { formatDistanceToNow } from 'date-fns'
-import { Mail, AlertTriangle, Loader2, CheckCircle, Bell, Megaphone, FileText, Calendar, Briefcase, Check, Archive, RotateCcw, ClipboardList } from 'lucide-react'
+import {
+  Mail,
+  AlertTriangle,
+  CheckCircle,
+  Bell,
+  Megaphone,
+  FileText,
+  Briefcase,
+  Check,
+  ClipboardList,
+} from 'lucide-react'
 
 const sourceIcons = {
   assignment_deadline: ClipboardList,
@@ -19,38 +29,73 @@ const sourceColors = {
   placement: 'var(--color-secondary)',
 }
 
-function NotificationCard({ notification, onMarkRead, onMarkUnread, loadingIds }) {
-  const Icon = sourceIcons[notification.source] || Mail
-  const color = sourceColors[notification.source] || 'var(--color-primary)'
+function NotificationCard({ notification, onMarkRead, loadingIds }) {
+  const normSource = (notification.source || '').toLowerCase()
+  const normStatus = (notification.status || '').toLowerCase()
+  const Icon = sourceIcons[normSource] || Bell
+  const color = sourceColors[normSource] || 'var(--color-primary)'
   const createdAt = new Date(notification.created_at)
   const isLoading = loadingIds.has(notification.id)
 
+  const formattedSource = normSource
+    ? normSource.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    : 'General'
+
   return (
-    <div className={`card ${notification.status === 'unread' ? 'border-l-4' : ''}`} style={{ padding: '1.25rem', borderLeftColor: notification.status === 'unread' ? color : 'transparent', background: notification.status === 'unread' ? `${color}08` : 'var(--color-surface)' }}>
+    <div
+      className={`card ${normStatus === 'unread' ? 'border-l-4' : ''}`}
+      style={{
+        padding: '1.25rem',
+        borderLeftColor: normStatus === 'unread' ? color : 'transparent',
+        background: normStatus === 'unread' ? `${color}08` : 'var(--color-surface)',
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: 'var(--radius-md)',
+            background: `${color}15`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color,
+            flexShrink: 0,
+          }}
+        >
           <Icon className="w-5 h-5" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              marginBottom: '0.5rem',
+            }}
+          >
             <h3 style={{ fontWeight: 600, color: 'var(--color-text)' }}>{notification.title}</h3>
             <time style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-              {formatDistanceToNow(createdAt, { addSuffix: true })}
+              {isNaN(createdAt.getTime()) ? '' : formatDistanceToNow(createdAt, { addSuffix: true })}
             </time>
           </div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '0.75rem' }}>{notification.message}</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '0.75rem' }}>
+            {notification.message}
+          </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color }}>
               <Icon className="w-3.5 h-3.5" />
-              {notification.source.replace('_', ' ')}
+              {formattedSource}
             </span>
-            {notification.status === 'unread' && (
+            {normStatus === 'unread' && (
               <span className="badge badge-primary" style={{ fontSize: '0.625rem' }}>New</span>
             )}
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-          {notification.status === 'unread' && (
+          {normStatus === 'unread' && (
             <button
               className="btn btn-primary btn-sm"
               onClick={() => onMarkRead(notification.id)}
@@ -61,26 +106,6 @@ function NotificationCard({ notification, onMarkRead, onMarkUnread, loadingIds }
               Mark Read
             </button>
           )}
-          {notification.status === 'read' && (
-            <button
-              className="btn btn-outline btn-sm"
-              onClick={() => onMarkUnread(notification.id)}
-              disabled={isLoading}
-              style={{ width: '100px' }}
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Mark Unread
-            </button>
-          )}
-          <button
-            className="btn btn-outline btn-sm"
-            onClick={() => {}} // Archive would need API
-            disabled={isLoading}
-            style={{ width: '100px' }}
-          >
-            <Archive className="w-3.5 h-3.5" />
-            Archive
-          </button>
         </div>
       </div>
     </div>
@@ -95,51 +120,56 @@ export function NotificationsPage() {
   const [filter, setFilter] = useState('all')
   const [loadingIds, setLoadingIds] = useState(new Set())
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await notificationsApi.get({ status: filter === 'all' ? undefined : filter })
-        setNotifications(res.data.notifications || [])
-        setUnreadCount(res.data.unread_count || 0)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
+  const fetchNotifications = async () => {
+    try {
+      const res = await notificationsService.getNotifications(filter)
+      // res may be { notifications: [...], unread_count: 3 } or array
+      if (Array.isArray(res)) {
+        setNotifications(res)
+        setUnreadCount(res.filter(n => (n.status || '').toLowerCase() === 'unread').length)
+      } else {
+        setNotifications(res.notifications || [])
+        setUnreadCount(res.unread_count || 0)
       }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-    fetchData()
+  }
+
+  useEffect(() => {
+    setLoading(true)
+    fetchNotifications()
   }, [filter])
 
   const handleMarkRead = async (id) => {
     setLoadingIds(prev => new Set(prev).add(id))
     try {
-      await notificationsApi.markRead(id)
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, status: 'read', read_at: new Date().toISOString() } : n))
+      await notificationsService.markAsRead(id)
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === id ? { ...n, status: 'read', read_at: new Date().toISOString() } : n
+        )
+      )
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (err) {
       setError(err.message)
     } finally {
-      setLoadingIds(prev => { const next = new Set(prev); next.delete(id); return next })
-    }
-  }
-
-  const handleMarkUnread = async (id) => {
-    setLoadingIds(prev => new Set(prev).add(id))
-    try {
-      // No API for mark unread yet
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, status: 'unread', read_at: null } : n))
-      setUnreadCount(prev => prev + 1)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoadingIds(prev => { const next = new Set(prev); next.delete(id); return next })
+      setLoadingIds(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     }
   }
 
   const handleMarkAllRead = async () => {
     try {
-      await notificationsApi.markAllRead()
-      setNotifications(prev => prev.map(n => ({ ...n, status: 'read', read_at: new Date().toISOString() })))
+      await notificationsService.markAllAsRead()
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, status: 'read', read_at: new Date().toISOString() }))
+      )
       setUnreadCount(0)
     } catch (err) {
       setError(err.message)
@@ -152,10 +182,35 @@ export function NotificationsPage() {
         {[1, 2, 3].map(i => (
           <div key={i} className="card" style={{ padding: '1.25rem' }}>
             <div className="animate-pulse" style={{ display: 'flex', gap: '1rem' }}>
-              <div className="animate-pulse" style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--color-border)' }} />
+              <div
+                className="animate-pulse"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--color-border)',
+                }}
+              />
               <div style={{ flex: 1 }}>
-                <div className="animate-pulse" style={{ height: '1.5rem', width: '60%', borderRadius: 'var(--radius-sm)', background: 'var(--color-border)', marginBottom: '0.5rem' }} />
-                <div className="animate-pulse" style={{ height: '2rem', width: '80%', borderRadius: 'var(--radius-sm)', background: 'var(--color-border)' }} />
+                <div
+                  className="animate-pulse"
+                  style={{
+                    height: '1.5rem',
+                    width: '60%',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--color-border)',
+                    marginBottom: '0.5rem',
+                  }}
+                />
+                <div
+                  className="animate-pulse"
+                  style={{
+                    height: '2rem',
+                    width: '80%',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--color-border)',
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -174,24 +229,44 @@ export function NotificationsPage() {
     )
   }
 
+  const hasUnread = unreadCount > 0 || notifications.some(n => (n.status || '').toLowerCase() === 'unread')
+
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '1.5rem',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Notifications</h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>Your academic updates and alerts</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          {unreadCount > 0 && (
+          {hasUnread && (
             <button className="btn btn-primary" onClick={handleMarkAllRead}>
               <CheckCircle className="w-5 h-5" />
-              <span>Mark All Read ({unreadCount})</span>
+              <span>Mark All Read {unreadCount > 0 ? `(${unreadCount})` : ''}</span>
             </button>
           )}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem', overflowX: 'auto' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          marginBottom: '1.5rem',
+          borderBottom: '1px solid var(--color-border)',
+          paddingBottom: '0.5rem',
+          overflowX: 'auto',
+        }}
+      >
         {['all', 'unread', 'read'].map(f => (
           <button
             key={f}
@@ -208,7 +283,7 @@ export function NotificationsPage() {
         <div className="empty-state">
           <Mail className="w-12 h-12" />
           <h3>No Notifications</h3>
-          <p>{filter === 'all' ? 'You\'re all caught up!' : `No ${filter} notifications`}</p>
+          <p>{filter === 'all' ? "You're all caught up!" : `No ${filter} notifications found in this view.`}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -217,7 +292,6 @@ export function NotificationsPage() {
               key={notification.id}
               notification={notification}
               onMarkRead={handleMarkRead}
-              onMarkUnread={handleMarkUnread}
               loadingIds={loadingIds}
             />
           ))}
@@ -226,3 +300,4 @@ export function NotificationsPage() {
     </div>
   )
 }
+export default NotificationsPage;

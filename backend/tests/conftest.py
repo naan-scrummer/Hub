@@ -34,13 +34,17 @@ async def test_engine():
 async def test_session(test_engine):
     async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
-        await seed_data(session)
+        # Patch async_session_maker temporarily to seed into this test engine
+        from unittest.mock import patch
+        with patch("app.seed.async_session_maker", async_session):
+           await seed_data(session)
+        
         yield session
 
 
 @pytest.fixture(scope="function")
 async def client(test_session):
-    def override_get_db():
+    async def override_get_db():
         yield test_session
 
     app.dependency_overrides[get_db] = override_get_db

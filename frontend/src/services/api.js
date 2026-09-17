@@ -92,4 +92,5 @@ export const notificationsApi = {
   get: (params) => api.get('/notifications', { params }),
   markRead: (notificationId) => api.post(`/notifications/${notificationId}/read`),
   markAllRead: () => api.post('/notifications/read-all'),
+  create: (data) => api.post('/notifications', data),
 }

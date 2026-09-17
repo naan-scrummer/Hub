@@ -24,7 +24,12 @@ from app.modules.assignments.models import Assignment, AssignmentStatus
 from app.modules.assignments.repository import AssignmentRepository
 from app.modules.reminders.models import Reminder, ReminderTriggerType, ReminderOrigin, ReminderStatus
 from app.modules.reminders.repository import ReminderRepository
-from app.modules.notifications.models import Notification, NotificationSource, NotificationStatus
+from app.modules.notifications.models import (
+    Notification,
+    NotificationSource,
+    NotificationStatus,
+    ProcessingStatus,
+)
 from app.modules.notifications.repository import NotificationRepository
 from app.logging.config import get_logger
 
@@ -438,29 +443,84 @@ async def seed_data(session: AsyncSession | None = None):
 
         logger.info("reminders_seeded", count=len(reminders_data))
 
-        # Create notifications
+        # Create notifications covering all supported sources and statuses (SCRUM-83/SCRUM-84)
         notifications_data = [
-            (NotificationSource.ASSIGNMENT_DEADLINE, assignments[0].id, "Assignment Due: Database Design Project", "Assignment 'Database Design Project' is due in 1 day"),
-            (NotificationSource.REMINDER_TRIGGER, None, "Reminder: Network Simulation Lab Overdue", "Assignment 'Network Simulation Lab' was due 2 days ago"),
-            (NotificationSource.ANNOUNCEMENT, None, "New Announcement: Midterm Exam Schedule Released", "The midterm examination schedule for the current semester has been published..."),
+            (
+                NotificationSource.ASSIGNMENT_DEADLINE,
+                assignments[0].id if assignments else 101,
+                "Assignment Due Soon: Database Design Project",
+                "Your DBMS project submission is due in 24 hours. Ensure all diagrams and schema SQL are included.",
+                NotificationStatus.UNREAD,
+                ProcessingStatus.PROCESSED,
+                None,
+                now - timedelta(hours=2),
+            ),
+            (
+                NotificationSource.REMINDER_TRIGGER,
+                None,
+                "Reminder: Study for Computer Networks",
+                "Custom study reminder: Chapter 4 packet routing revision scheduled now.",
+                NotificationStatus.UNREAD,
+                ProcessingStatus.PROCESSED,
+                None,
+                now - timedelta(hours=5),
+            ),
+            (
+                NotificationSource.ANNOUNCEMENT,
+                None,
+                "Campus Placement Drive: Registration Open",
+                "Registration for the upcoming technology recruitment drive closes this Friday at 5 PM.",
+                NotificationStatus.READ,
+                ProcessingStatus.PROCESSED,
+                now - timedelta(hours=8),
+                now - timedelta(days=1),
+            ),
+            (
+                NotificationSource.EXAMINATION,
+                exams_list[0].id if exams_list else 404,
+                "Mid-Semester Examination Schedule Live",
+                "The official timetable for Mid-Sem 2 examinations has been published on the academic portal.",
+                NotificationStatus.READ,
+                ProcessingStatus.PROCESSED,
+                now - timedelta(days=1),
+                now - timedelta(days=2),
+            ),
+            (
+                NotificationSource.PLACEMENT,
+                None,
+                "Placement Shortlist: TechCorp Solutions",
+                "You have been shortlisted for the initial technical evaluation round with TechCorp Solutions.",
+                NotificationStatus.UNREAD,
+                ProcessingStatus.PROCESSED,
+                None,
+                now - timedelta(minutes=45),
+            ),
+            (
+                NotificationSource.ANNOUNCEMENT,
+                None,
+                "Annual Sports Day Archived Information",
+                "Annual sports day track events timetable and venue details.",
+                NotificationStatus.ARCHIVED,
+                ProcessingStatus.PROCESSED,
+                now - timedelta(days=12),
+                now - timedelta(days=15),
+            ),
         ]
 
-        for source, source_id, title, message in notifications_data:
+        for source, source_id, title, message, status, p_status, read_at, created_at in notifications_data:
             notification = Notification(
                 student_id=demo_profile.id,
                 source=source,
                 source_id=source_id,
                 title=title,
                 message=message,
-                status=NotificationStatus.UNREAD,
+                status=status,
+                processing_status=p_status,
+                read_at=read_at,
+                created_at=created_at,
+                updated_at=created_at,
             )
             await notification_repo.create(notification)
-
-        # Mark one as read
-        first_notification = await notification_repo.get_by_student(demo_profile.id)
-        if first_notification:
-            first_notification[0].status = NotificationStatus.READ
-            first_notification[0].read_at = datetime.utcnow()
 
         logger.info("notifications_seeded", count=len(notifications_data))
 
