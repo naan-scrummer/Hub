@@ -11,8 +11,6 @@ import {
   Mail,
   Briefcase,
   AlertTriangle,
-  CheckCircle,
-  Clock,
   TrendingUp,
   ExternalLink,
 } from 'lucide-react'
@@ -37,11 +35,45 @@ function StatCard({ title, value, icon: Icon, trend, trendUp = true, loading }) 
   if (loading) {
     return (
       <div className="card">
-        <div className="card-content" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="animate-pulse" style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', background: 'var(--color-primary-light)' }} />
+        <div
+          className="card-content"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+          }}
+        >
+          <div
+            className="animate-pulse"
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--color-primary-light)',
+            }}
+          />
+
           <div style={{ flex: 1 }}>
-            <div className="animate-pulse" style={{ height: '1.5rem', width: '60%', borderRadius: 'var(--radius-sm)', background: 'var(--color-border)' }} />
-            <div className="animate-pulse" style={{ height: '2.5rem', width: '40%', borderRadius: 'var(--radius-sm)', background: 'var(--color-border)', marginTop: '0.5rem' }} />
+            <div
+              className="animate-pulse"
+              style={{
+                height: '1.5rem',
+                width: '60%',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-border)',
+              }}
+            />
+
+            <div
+              className="animate-pulse"
+              style={{
+                height: '2.5rem',
+                width: '40%',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-border)',
+                marginTop: '0.5rem',
+              }}
+            />
           </div>
         </div>
       </div>
@@ -50,16 +82,66 @@ function StatCard({ title, value, icon: Icon, trend, trendUp = true, loading }) 
 
   return (
     <div className="card">
-      <div className="card-content" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', background: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
+      <div
+        className="card-content"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+        }}
+      >
+        <div
+          style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: 'var(--radius-md)',
+            background: 'var(--color-primary-light)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--color-primary)',
+          }}
+        >
           <Icon className="w-6 h-6" />
         </div>
+
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>{title}</p>
-          <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text)' }}>{value}</p>
+          <p
+            style={{
+              fontSize: '0.875rem',
+              color: 'var(--color-text-secondary)',
+              fontWeight: 500,
+            }}
+          >
+            {title}
+          </p>
+
+          <p
+            style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: 'var(--color-text)',
+            }}
+          >
+            {value}
+          </p>
+
           {trend && (
-            <p style={{ fontSize: '0.75rem', color: trendUp ? 'var(--color-success)' : 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}>
-              <TrendingUp className={`w-4 h-4 ${!trendUp && 'rotate-180'}`} />
+            <p
+              style={{
+                fontSize: '0.75rem',
+                color: trendUp
+                  ? 'var(--color-success)'
+                  : 'var(--color-danger)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                marginTop: '0.25rem',
+              }}
+            >
+              <TrendingUp
+                className={`w-4 h-4 ${!trendUp ? 'rotate-180' : ''}`}
+              />
               {trend}
             </p>
           )}
@@ -72,15 +154,60 @@ function StatCard({ title, value, icon: Icon, trend, trendUp = true, loading }) 
 function AssignmentItem({ assignment }) {
   const dueDate = new Date(assignment.due_date)
   const isOverdue = assignment.status === 'overdue'
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 0', borderBottom: '1px solid var(--color-border)' }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        padding: '0.75rem 0',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+    >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{assignment.title}</p>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>{assignment.subject_code || 'Unknown Subject'}</p>
+        <p
+          style={{
+            fontWeight: 500,
+            color: 'var(--color-text)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {assignment.title}
+        </p>
+
+        <p
+          style={{
+            fontSize: '0.8125rem',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          {assignment.subject_code || 'Unknown Subject'}
+        </p>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap' }}>
-        <span className={`badge ${statusColors[assignment.status]}`}>{statusLabels[assignment.status]}</span>
-        <time style={{ fontSize: '0.8125rem', color: isOverdue ? 'var(--color-danger)' : 'var(--color-text-secondary)' }}>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <span className={`badge ${statusColors[assignment.status]}`}>
+          {statusLabels[assignment.status]}
+        </span>
+
+        <time
+          style={{
+            fontSize: '0.8125rem',
+            color: isOverdue
+              ? 'var(--color-danger)'
+              : 'var(--color-text-secondary)',
+          }}
+        >
           {format(dueDate, 'MMM d, yyyy')}
         </time>
       </div>
@@ -90,16 +217,59 @@ function AssignmentItem({ assignment }) {
 
 function ExamItem({ exam }) {
   const examDate = new Date(exam.exam_date)
-  const daysUntil = Math.ceil((examDate - new Date()) / (1000 * 60 * 60 * 24))
+  const daysUntil = Math.ceil(
+    (examDate - new Date()) / (1000 * 60 * 60 * 24)
+  )
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 0', borderBottom: '1px solid var(--color-border)' }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        padding: '0.75rem 0',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+    >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{exam.title}</p>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>{exam.subject_code || 'Unknown Subject'} • {exam.exam_type}</p>
+        <p
+          style={{
+            fontWeight: 500,
+            color: 'var(--color-text)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {exam.title}
+        </p>
+
+        <p
+          style={{
+            fontSize: '0.8125rem',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          {exam.subject_code || 'Unknown Subject'} • {exam.exam_type}
+        </p>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap' }}>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          whiteSpace: 'nowrap',
+        }}
+      >
         <span className="badge badge-primary">{daysUntil} days</span>
-        <time style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+
+        <time
+          style={{
+            fontSize: '0.8125rem',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
           {format(examDate, 'MMM d, yyyy')}
         </time>
       </div>
@@ -109,13 +279,53 @@ function ExamItem({ exam }) {
 
 function AnnouncementItem({ announcement }) {
   const pubDate = new Date(announcement.published_at)
+
   return (
-    <div style={{ padding: '0.75rem 0', borderBottom: '1px solid var(--color-border)' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-        <span className="badge badge-secondary" style={{ marginTop: '0.125rem', fontSize: '0.6875rem' }}>{announcement.category}</span>
+    <div
+      style={{
+        padding: '0.75rem 0',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.75rem',
+        }}
+      >
+        <span
+          className="badge badge-secondary"
+          style={{
+            marginTop: '0.125rem',
+            fontSize: '0.6875rem',
+          }}
+        >
+          {announcement.category}
+        </span>
+
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{announcement.title}</p>
-          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>{announcement.source_name || 'Unknown Source'} • {formatDistanceToNow(pubDate, { addSuffix: true })}</p>
+          <p
+            style={{
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {announcement.title}
+          </p>
+
+          <p
+            style={{
+              fontSize: '0.8125rem',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {announcement.source_name || 'Unknown Source'} •{' '}
+            {formatDistanceToNow(pubDate, { addSuffix: true })}
+          </p>
         </div>
       </div>
     </div>
@@ -123,18 +333,68 @@ function AnnouncementItem({ announcement }) {
 }
 
 function AttendanceItem({ record }) {
-  const color = record.attendance_percentage >= 75 ? 'var(--color-success)' : record.attendance_percentage >= 60 ? 'var(--color-warning)' : 'var(--color-danger)'
+  const color =
+    record.attendance_percentage >= 75
+      ? 'var(--color-success)'
+      : record.attendance_percentage >= 60
+        ? 'var(--color-warning)'
+        : 'var(--color-danger)'
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 0', borderBottom: '1px solid var(--color-border)' }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        padding: '0.75rem 0',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+    >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{record.subject_name || record.subject_code || 'Unknown Subject'}</p>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>{record.classes_attended} / {record.total_classes} classes</p>
-      </div>
-      <div style={{ textAlign: 'right' }}>
-        <p style={{ fontSize: '1.125rem', fontWeight: 700, color }}>
-          {record.attendance_percentage.toFixed(1)}%
+        <p
+          style={{
+            fontWeight: 500,
+            color: 'var(--color-text)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {record.subject_name ||
+            record.subject_code ||
+            'Overall Attendance'}
         </p>
-        {record.is_unavailable && <span className="badge badge-warning" style={{ fontSize: '0.6875rem' }}>Unavailable</span>}
+
+        <p
+          style={{
+            fontSize: '0.8125rem',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          {record.classes_attended || 0} / {record.total_classes || 0}{' '}
+          classes
+        </p>
+      </div>
+
+      <div style={{ textAlign: 'right' }}>
+        <p
+          style={{
+            fontSize: '1.125rem',
+            fontWeight: 700,
+            color,
+          }}
+        >
+          {Number(record.attendance_percentage || 0).toFixed(1)}%
+        </p>
+
+        {record.is_unavailable && (
+          <span
+            className="badge badge-warning"
+            style={{ fontSize: '0.6875rem' }}
+          >
+            Unavailable
+          </span>
+        )}
       </div>
     </div>
   )
@@ -142,18 +402,73 @@ function AttendanceItem({ record }) {
 
 function ReminderItem({ reminder }) {
   const triggerTime = new Date(reminder.trigger_time)
-  const isPast = reminder.trigger_time < new Date().toISOString()
+  const isPast =
+    reminder.trigger_time < new Date().toISOString()
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 0', borderBottom: '1px solid var(--color-border)' }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        padding: '0.75rem 0',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+    >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{reminder.title}</p>
-        {reminder.description && <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>{reminder.description}</p>}
+        <p
+          style={{
+            fontWeight: 500,
+            color: 'var(--color-text)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {reminder.title}
+        </p>
+
+        {reminder.description && (
+          <p
+            style={{
+              fontSize: '0.8125rem',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {reminder.description}
+          </p>
+        )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap' }}>
-        <span className={`badge ${reminder.status === 'processed' ? 'badge-success' : reminder.status === 'cancelled' ? 'badge-secondary' : 'badge-warning'}`}>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <span
+          className={`badge ${
+            reminder.status === 'processed'
+              ? 'badge-success'
+              : reminder.status === 'cancelled'
+                ? 'badge-secondary'
+                : 'badge-warning'
+          }`}
+        >
           {statusLabels[reminder.status] || reminder.status}
         </span>
-        <time style={{ fontSize: '0.8125rem', color: isPast && reminder.status === 'pending' ? 'var(--color-danger)' : 'var(--color-text-secondary)' }}>
+
+        <time
+          style={{
+            fontSize: '0.8125rem',
+            color:
+              isPast && reminder.status === 'pending'
+                ? 'var(--color-danger)'
+                : 'var(--color-text-secondary)',
+          }}
+        >
           {format(triggerTime, 'MMM d, HH:mm')}
         </time>
       </div>
@@ -163,22 +478,72 @@ function ReminderItem({ reminder }) {
 
 function PlacementItem({ opportunity }) {
   return (
-    <div style={{ padding: '0.75rem 0', borderBottom: '1px solid var(--color-border)' }}>
-      <p style={{ fontWeight: 500, color: 'var(--color-text)' }}>{opportunity.title}</p>
-      <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>{opportunity.company_name || 'Unknown Company'}</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+    <div
+      style={{
+        padding: '0.75rem 0',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+    >
+      <p
+        style={{
+          fontWeight: 500,
+          color: 'var(--color-text)',
+        }}
+      >
+        {opportunity.title}
+      </p>
+
+      <p
+        style={{
+          fontSize: '0.8125rem',
+          color: 'var(--color-text-secondary)',
+        }}
+      >
+        {opportunity.company_name || 'Unknown Company'}
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          marginTop: '0.5rem',
+          flexWrap: 'wrap',
+        }}
+      >
         {opportunity.location && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              fontSize: '0.8125rem',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
             <ExternalLink className="w-4 h-4" />
             {opportunity.location}
           </span>
         )}
+
         {opportunity.package_details && (
-          <span className="badge badge-success">{opportunity.package_details}</span>
+          <span className="badge badge-success">
+            {opportunity.package_details}
+          </span>
         )}
+
         {opportunity.application_deadline && (
-          <time style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
-            Apply by {format(new Date(opportunity.application_deadline), 'MMM d')}
+          <time
+            style={{
+              fontSize: '0.8125rem',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            Apply by{' '}
+            {format(
+              new Date(opportunity.application_deadline),
+              'MMM d'
+            )}
           </time>
         )}
       </div>
@@ -186,27 +551,72 @@ function PlacementItem({ opportunity }) {
   )
 }
 
-function SectionCard({ title, icon: Icon, children, emptyMessage, loading, action }) {
+function SectionCard({
+  title,
+  icon: Icon,
+  children,
+  emptyMessage,
+  loading,
+  action,
+}) {
   return (
-    <div className="card" style={{ minHeight: '280px', display: 'flex', flexDirection: 'column' }}>
+    <div
+      className="card"
+      style={{
+        minHeight: '280px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <div className="card-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Icon className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}
+        >
+          <Icon
+            className="w-5 h-5"
+            style={{ color: 'var(--color-primary)' }}
+          />
           <h3 className="card-title">{title}</h3>
         </div>
+
         {action}
       </div>
-      <div className="card-content" style={{ flex: 1, overflow: 'hidden' }}>
+
+      <div
+        className="card-content"
+        style={{
+          flex: 1,
+          overflow: 'hidden',
+        }}
+      >
         {loading ? (
           <div className="loading" style={{ flex: 1 }}>
-            <div className="animate-pulse" style={{ height: '100%', background: 'linear-gradient(90deg, var(--color-border) 25%, var(--color-primary-light) 50%, var(--color-border) 75%)', backgroundSize: '200% 100%', animation: 'loading 1.5s infinite' }} />
+            <div
+              className="animate-pulse"
+              style={{
+                height: '100%',
+                background:
+                  'linear-gradient(90deg, var(--color-border) 25%, var(--color-primary-light) 50%, var(--color-border) 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'loading 1.5s infinite',
+              }}
+            />
           </div>
         ) : React.Children.count(children) === 0 ? (
           <div className="empty-state" style={{ flex: 1 }}>
             <p>{emptyMessage}</p>
           </div>
         ) : (
-          <div style={{ overflowY: 'auto', maxHeight: '320px' }}>
+          <div
+            style={{
+              overflowY: 'auto',
+              maxHeight: '320px',
+            }}
+          >
             {children}
           </div>
         )}
@@ -228,20 +638,46 @@ export function DashboardPage() {
       } catch (err) {
         setError(err.message)
       } finally {
-        // TODO: Restore this when the dashboard data-render crash is fixed.
-        // setLoading(false)
+        setLoading(false)
       }
     }
+
     fetchData()
   }, [])
 
   if (loading) {
     return (
-      <div className="grid grid-4" style={{ marginBottom: '1.5rem' }}>
-        <StatCard title="Upcoming Assignments" value="—" icon={ClipboardList} loading />
-        <StatCard title="Overdue Assignments" value="—" icon={AlertTriangle} loading />
-        <StatCard title="Upcoming Exams" value="—" icon={FileText} loading />
-        <StatCard title="Unread Notifications" value="—" icon={Mail} loading />
+      <div
+        className="grid grid-4"
+        style={{ marginBottom: '1.5rem' }}
+      >
+        <StatCard
+          title="Upcoming Assignments"
+          value="—"
+          icon={ClipboardList}
+          loading
+        />
+
+        <StatCard
+          title="Overdue Assignments"
+          value="—"
+          icon={AlertTriangle}
+          loading
+        />
+
+        <StatCard
+          title="Upcoming Exams"
+          value="—"
+          icon={FileText}
+          loading
+        />
+
+        <StatCard
+          title="Unread Notifications"
+          value="—"
+          icon={Mail}
+          loading
+        />
       </div>
     )
   }
@@ -250,7 +686,9 @@ export function DashboardPage() {
     return (
       <div className="error-state">
         <AlertTriangle className="w-12 h-12" />
+
         <h3>Failed to load dashboard</h3>
+
         <p>{error}</p>
       </div>
     )
@@ -266,100 +704,277 @@ export function DashboardPage() {
     pending_reminders = [],
     unread_notifications_count = 0,
     placement_opportunities = [],
-  } = data
+    unavailable_sections = [],
+  } = data || {}
+
+  const isUnavailable = (section) =>
+    unavailable_sections.includes(section)
 
   return (
     <div>
       <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.25rem' }}>Dashboard</h1>
-        <p style={{ color: 'var(--color-text-secondary)' }}>Overview of your academic attention items</p>
+        <h1
+          style={{
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            marginBottom: '0.25rem',
+          }}
+        >
+          Dashboard
+        </h1>
+
+        <p
+          style={{
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          Overview of your academic attention items
+        </p>
       </div>
 
-      <div className="grid grid-4" style={{ marginBottom: '1.5rem' }}>
+      <div
+        className="grid grid-4"
+        style={{ marginBottom: '1.5rem' }}
+      >
         <StatCard
           title="Upcoming Assignments"
-          value={upcoming_assignments.length}
+          value={
+            isUnavailable('assignments')
+              ? '—'
+              : upcoming_assignments.length
+          }
           icon={ClipboardList}
-          trend={overdue_assignments.length > 0 ? `${overdue_assignments.length} overdue` : null}
+          trend={
+            !isUnavailable('assignments') &&
+            overdue_assignments.length > 0
+              ? `${overdue_assignments.length} overdue`
+              : null
+          }
           trendUp={false}
           loading={false}
         />
+
         <StatCard
           title="Upcoming Exams"
-          value={upcoming_examinations.length}
+          value={
+            isUnavailable('examinations')
+              ? '—'
+              : upcoming_examinations.length
+          }
           icon={FileText}
-          trend={upcoming_examinations.length > 0 ? `${upcoming_examinations[0] ? Math.ceil((new Date(upcoming_examinations[0].exam_date) - new Date()) / (1000 * 60 * 60 * 24)) : 0} days` : null}
-          trendUp={true}
+          trend={
+            !isUnavailable('examinations') &&
+            upcoming_examinations.length > 0
+              ? `${Math.max(
+                  0,
+                  Math.ceil(
+                    (new Date(
+                      upcoming_examinations[0].exam_date
+                    ) -
+                      new Date()) /
+                      (1000 * 60 * 60 * 24)
+                  )
+                )} days`
+              : null
+          }
+          trendUp
           loading={false}
         />
+
         <StatCard
           title="Attendance"
-          value={`${attendance_summary.overall_percentage || 0}%`}
+          value={
+            isUnavailable('attendance')
+              ? '—'
+              : `${attendance_summary.overall_percentage || 0}%`
+          }
           icon={Calendar}
-          trend={`${attendance_summary.total_classes_attended || 0}/${attendance_summary.total_classes || 0} classes`}
-          trendUp={attendance_summary.overall_percentage >= 75}
+          trend={
+            !isUnavailable('attendance')
+              ? `${attendance_summary.total_classes_attended || 0}/${attendance_summary.total_classes || 0} classes`
+              : null
+          }
+          trendUp={
+            !isUnavailable('attendance') &&
+            attendance_summary.overall_percentage >= 75
+          }
           loading={false}
         />
+
         <StatCard
           title="Unread Notifications"
-          value={unread_notifications_count}
+          value={
+            isUnavailable('notifications')
+              ? '—'
+              : unread_notifications_count
+          }
           icon={Mail}
           loading={false}
         />
       </div>
 
-      <div className="grid grid-2" style={{ marginBottom: '1.5rem' }}>
+      <div
+        className="grid grid-2"
+        style={{ marginBottom: '1.5rem' }}
+      >
         <SectionCard
           title="Upcoming Assignments"
           icon={ClipboardList}
-          children={upcoming_assignments.slice(0, 5).map(a => <AssignmentItem key={a.id} assignment={a} />)}
-          emptyMessage="No upcoming assignments"
+          children={
+            isUnavailable('assignments')
+              ? null
+              : upcoming_assignments
+                  .slice(0, 5)
+                  .map((assignment) => (
+                    <AssignmentItem
+                      key={assignment.id}
+                      assignment={assignment}
+                    />
+                  ))
+          }
+          emptyMessage={
+            isUnavailable('assignments')
+              ? 'Assignment information is currently unavailable.'
+              : 'No upcoming assignments'
+          }
           loading={false}
         />
+
         <SectionCard
           title="Overdue Assignments"
           icon={AlertTriangle}
-          children={overdue_assignments.slice(0, 5).map(a => <AssignmentItem key={a.id} assignment={a} />)}
-          emptyMessage="No overdue assignments"
+          children={
+            isUnavailable('assignments')
+              ? null
+              : overdue_assignments
+                  .slice(0, 5)
+                  .map((assignment) => (
+                    <AssignmentItem
+                      key={assignment.id}
+                      assignment={assignment}
+                    />
+                  ))
+          }
+          emptyMessage={
+            isUnavailable('assignments')
+              ? 'Assignment information is currently unavailable.'
+              : 'No overdue assignments'
+          }
           loading={false}
         />
       </div>
 
-      <div className="grid grid-2" style={{ marginBottom: '1.5rem' }}>
+      <div
+        className="grid grid-2"
+        style={{ marginBottom: '1.5rem' }}
+      >
         <SectionCard
           title="Upcoming Examinations"
           icon={FileText}
-          children={upcoming_examinations.slice(0, 5).map(e => <ExamItem key={e.id} exam={e} />)}
-          emptyMessage="No upcoming examinations"
+          children={
+            isUnavailable('examinations')
+              ? null
+              : upcoming_examinations
+                  .slice(0, 5)
+                  .map((exam) => (
+                    <ExamItem
+                      key={exam.id}
+                      exam={exam}
+                    />
+                  ))
+          }
+          emptyMessage={
+            isUnavailable('examinations')
+              ? 'Examination information is currently unavailable.'
+              : 'No upcoming examinations'
+          }
           loading={false}
         />
+
         <SectionCard
           title="Recent Announcements"
           icon={Megaphone}
-          children={recent_announcements.slice(0, 5).map(a => <AnnouncementItem key={a.id} announcement={a} />)}
-          emptyMessage="No recent announcements"
+          children={
+            isUnavailable('announcements')
+              ? null
+              : recent_announcements
+                  .slice(0, 5)
+                  .map((announcement) => (
+                    <AnnouncementItem
+                      key={announcement.id}
+                      announcement={announcement}
+                    />
+                  ))
+          }
+          emptyMessage={
+            isUnavailable('announcements')
+              ? 'Announcement information is currently unavailable.'
+              : 'No recent announcements'
+          }
           loading={false}
         />
       </div>
 
-      <div className="grid grid-2" style={{ marginBottom: '1.5rem' }}>
+      <div
+        className="grid grid-2"
+        style={{ marginBottom: '1.5rem' }}
+      >
         <SectionCard
           title="Attendance Summary"
           icon={Calendar}
-          children={Object.entries(attendance_summary).length > 0 ? (
-            <>
-              <AttendanceItem record={attendance_summary} />
-              {attendance_summary.records?.slice(0, 3).map(r => <AttendanceItem key={r.id} record={r} />)}
-            </>
-          ) : null}
-          emptyMessage="Attendance data unavailable. Sync from portal."
+          children={
+            isUnavailable('attendance')
+              ? null
+              : Object.entries(attendance_summary).length > 0 ? (
+                  <>
+                    <AttendanceItem
+                      record={{
+                        ...attendance_summary,
+                        subject_name: 'Overall Attendance',
+                        attendance_percentage:
+                          attendance_summary.overall_percentage || 0,
+                      }}
+                    />
+
+                    {attendance_summary.records
+                      ?.slice(0, 3)
+                      .map((record) => (
+                        <AttendanceItem
+                          key={record.id}
+                          record={record}
+                        />
+                      ))}
+                  </>
+                ) : null
+          }
+          emptyMessage={
+            isUnavailable('attendance')
+              ? 'Attendance information is currently unavailable.'
+              : 'Attendance data unavailable. Sync from portal.'
+          }
           loading={false}
         />
+
         <SectionCard
           title="Pending Reminders"
           icon={Bell}
-          children={pending_reminders.slice(0, 5).map(r => <ReminderItem key={r.id} reminder={r} />)}
-          emptyMessage="No pending reminders"
+          children={
+            isUnavailable('reminders')
+              ? null
+              : pending_reminders
+                  .slice(0, 5)
+                  .map((reminder) => (
+                    <ReminderItem
+                      key={reminder.id}
+                      reminder={reminder}
+                    />
+                  ))
+          }
+          emptyMessage={
+            isUnavailable('reminders')
+              ? 'Reminder information is currently unavailable.'
+              : 'No pending reminders'
+          }
           loading={false}
         />
       </div>
@@ -368,26 +983,107 @@ export function DashboardPage() {
         <SectionCard
           title="Academic Summary"
           icon={GraduationCap}
-          children={academic_summary.slice(0, 5).map(r => (
-            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 0', borderBottom: '1px solid var(--color-border)' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.subject_name || r.subject_code || 'Unknown Subject'}</p>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Semester {r.semester}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-text)' }}>{r.grade || '—'}</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{r.total_marks || 0} / {r.max_internal_marks + r.max_external_marks || 0}</p>
-              </div>
-            </div>
-          ))}
-          emptyMessage="No academic records available"
+          children={
+            isUnavailable('academics')
+              ? null
+              : academic_summary
+                  .slice(0, 5)
+                  .map((record) => (
+                    <div
+                      key={record.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        padding: '0.75rem 0',
+                        borderBottom:
+                          '1px solid var(--color-border)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontWeight: 500,
+                            color: 'var(--color-text)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {record.subject_name ||
+                            record.subject_code ||
+                            'Unknown Subject'}
+                        </p>
+
+                        <p
+                          style={{
+                            fontSize: '0.8125rem',
+                            color:
+                              'var(--color-text-secondary)',
+                          }}
+                        >
+                          Semester {record.semester}
+                        </p>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <p
+                          style={{
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            color: 'var(--color-text)',
+                          }}
+                        >
+                          {record.grade || '—'}
+                        </p>
+
+                        <p
+                          style={{
+                            fontSize: '0.75rem',
+                            color: 'var(--color-text-muted)',
+                          }}
+                        >
+                          {record.total_marks || 0} /{' '}
+                          {(record.max_internal_marks || 0) +
+                            (record.max_external_marks || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+          }
+          emptyMessage={
+            isUnavailable('academics')
+              ? 'Academic information is currently unavailable.'
+              : 'No academic records available'
+          }
           loading={false}
         />
+
         <SectionCard
           title="Placement Opportunities"
           icon={Briefcase}
-          children={placement_opportunities.slice(0, 3).map(o => <PlacementItem key={o.id} opportunity={o} />)}
-          emptyMessage="No open placement opportunities"
+          children={
+            isUnavailable('placements')
+              ? null
+              : placement_opportunities
+                  .slice(0, 3)
+                  .map((opportunity) => (
+                    <PlacementItem
+                      key={opportunity.id}
+                      opportunity={opportunity}
+                    />
+                  ))
+          }
+          emptyMessage={
+            isUnavailable('placements')
+              ? 'Placement information is currently unavailable.'
+              : 'No open placement opportunities'
+          }
           loading={false}
         />
       </div>

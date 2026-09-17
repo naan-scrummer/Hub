@@ -32,3 +32,4 @@ class DashboardDataResponse(BaseModel):
     pending_reminders: List[ReminderResponse]
     unread_notifications_count: int
     placement_opportunities: List[PlacementOpportunityResponse]
+    unavailable_sections: List[str] = []
