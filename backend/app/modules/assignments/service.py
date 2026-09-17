@@ -67,8 +67,9 @@ class AssignmentService:
         logger.info("assignment_created", assignment_id=assignment.id, student_id=student_id)
         return assignment
 
-    async def update(self, assignment: Assignment) -> Assignment:
-        old_due_date = assignment.due_date
+    async def update(self, assignment: Assignment, old_due_date: Optional[datetime] = None) -> Assignment:
+        if old_due_date is None:
+            old_due_date = assignment.due_date
         assignment = await self.assignment_repo.update(assignment)
 
         # Update automatic reminders if due date shifted (SCRUM 32 spec)
