@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form, status
+import os
+import uuid
+import aiofiles
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
@@ -118,19 +121,53 @@ async def get_materials_by_subject(
     return StudyMaterialListResponse(materials=material_responses, total=len(material_responses))
 
 
-@router.post("", response_model=StudyMaterialResponse)
+UPLOAD_DIR = "uploads/materials"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@router.post("", response_model=StudyMaterialResponse, status_code=status.HTTP_201_CREATED)
 async def create_material(
-    request: StudyMaterialCreateRequest,
+    subject_id: int = Form(...),
+    title: str = Form(...),
+    material_type: str = Form(...),
+    description: Optional[str] = Form(None),
+    external_url: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
     profile: StudentProfile = Depends(get_current_student_profile),
     material_service: StudyMaterialService = Depends(get_material_service),
 ):
+    if not file and not external_url:
+        raise HTTPException(status_code=400, detail="Either file or external_url must be provided")
+
+    file_path = None
+    if file:
+        allowed_extensions = {".pdf", ".doc", ".docx", ".txt", ".ppt", ".pptx", ".jpg", ".png", ".zip"}
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+
+        safe_filename = f"{uuid.uuid4()}{ext}"
+        local_path = os.path.join(UPLOAD_DIR, safe_filename).replace("\\", "/")
+        try:
+            async with aiofiles.open(local_path, 'wb') as out_file:
+                content = await file.read()
+                if len(content) > 10 * 1024 * 1024:
+                    raise HTTPException(status_code=400, detail="File too large (max 10MB)")
+                await out_file.write(content)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to upload file: {e}")
+            raise HTTPException(status_code=500, detail="Failed to save file")
+
+        file_path = f"/static/materials/{safe_filename}"
+
     material = material_service.create_material(
-        subject_id=request.subject_id,
-        title=request.title,
-        material_type=request.material_type,
-        description=request.description,
-        file_path=request.file_path,
-        external_url=request.external_url,
+        subject_id=subject_id,
+        title=title,
+        material_type=material_type,
+        description=description,
+        file_path=file_path,
+        external_url=external_url,
         uploaded_by_student_id=profile.id,
         is_approved=True,
     )
