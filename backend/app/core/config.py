@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     # Frontend
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # Notification Pipeline
+    NOTIFICATION_JOB_INTERVAL_MINUTES: int = 5
+    NOTIFICATION_RETENTION_DAYS: int = 30
+    NOTIFICATION_BATCH_SIZE: int = 100
+    ENABLE_BACKGROUND_NOTIFICATIONS: bool = True
+
 
 @lru_cache
 def get_settings() -> Settings:

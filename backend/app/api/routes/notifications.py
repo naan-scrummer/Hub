@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
@@ -9,12 +9,12 @@ from app.modules.notifications.repository import NotificationRepository
 from app.schemas.notifications import (
     NotificationResponse,
     NotificationListResponse,
+    NotificationCreate,
     NotificationStatus,
     NotificationSource,
 )
 from app.modules.authentication.models import StudentProfile
 from app.logging.config import get_logger
-
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 logger = get_logger(__name__)
@@ -27,7 +27,7 @@ def get_notification_service(db: AsyncSession = Depends(get_db)) -> Notification
 
 @router.get("", response_model=NotificationListResponse)
 async def get_notifications(
-    status: Optional[NotificationStatus] = None,
+    status: Optional[str] = Query(None, description="Filter by status: all, unread, read, archived"),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     profile: StudentProfile = Depends(get_current_student_profile),
@@ -38,19 +38,7 @@ async def get_notifications(
     )
     unread_count = await notification_service.get_unread_count(profile.id)
 
-    responses = []
-    for n in notifications:
-        responses.append(NotificationResponse(
-            id=n.id,
-            student_id=n.student_id,
-            source=n.source,
-            source_id=n.source_id,
-            title=n.title,
-            message=n.message,
-            status=n.status,
-            read_at=n.read_at,
-            created_at=n.created_at,
-        ))
+    responses = [NotificationResponse.model_validate(n) for n in notifications]
 
     return NotificationListResponse(
         notifications=responses,
@@ -68,17 +56,7 @@ async def mark_notification_read(
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")
 
-    return NotificationResponse(
-        id=notification.id,
-        student_id=notification.student_id,
-        source=notification.source,
-        source_id=notification.source_id,
-        title=notification.title,
-        message=notification.message,
-        status=notification.status,
-        read_at=notification.read_at,
-        created_at=notification.created_at,
-    )
+    return NotificationResponse.model_validate(notification)
 
 
 @router.post("/read-all")
@@ -87,4 +65,19 @@ async def mark_all_read(
     notification_service: NotificationService = Depends(get_notification_service),
 ):
     count = await notification_service.mark_all_as_read(profile.id)
-    return {"message": f"Marked {count} notifications as read"}
+    return {"message": f"Marked {count} notifications as read", "updated_count": count}
+
+
+@router.post("", response_model=NotificationResponse, status_code=status.HTTP_201_CREATED)
+async def create_notification(
+    payload: NotificationCreate,
+    profile: StudentProfile = Depends(get_current_student_profile),
+    notification_service: NotificationService = Depends(get_notification_service),
+):
+    if payload.student_id != profile.id:
+        raise HTTPException(status_code=403, detail="Cannot generate notification for another student")
+    try:
+        notification = await notification_service.generate_notification(payload)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return NotificationResponse.model_validate(notification)

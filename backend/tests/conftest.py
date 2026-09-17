@@ -6,6 +6,7 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base, get_db
 from app.main import app
 from app.core.config import Settings
+from app.seed import seed_data
 from httpx import AsyncClient, ASGITransport
 
 
@@ -33,12 +34,16 @@ async def test_engine():
 async def test_session(test_engine):
     async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
+        # Patch async_session_maker temporarily to seed into this test engine
+        from unittest.mock import patch
+        with patch("app.seed.async_session_maker", async_session):
+            await seed_data()
         yield session
 
 
 @pytest.fixture(scope="function")
 async def client(test_session):
-    def override_get_db():
+    async def override_get_db():
         yield test_session
 
     app.dependency_overrides[get_db] = override_get_db
