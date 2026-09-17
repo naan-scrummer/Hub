@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { studyMaterialsApi } from '../services/api'
 import { format, formatDistanceToNow } from 'date-fns'
 import { BookOpen, Search, Filter, Plus, ExternalLink, FileText, Loader2, AlertTriangle, ChevronDown } from 'lucide-react'
@@ -77,24 +77,48 @@ export function StudyMaterialsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [subjectFilter, setSubjectFilter] = useState('')
+  const [showUpload, setShowUpload] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
+  const formRef = useRef(null)
+
+  const fetchMaterials = async () => {
+    setLoading(true)
+    try {
+      const res = await studyMaterialsApi.get({
+        query: searchQuery,
+        material_type: typeFilter === 'all' ? undefined : typeFilter,
+        subject_id: subjectFilter || undefined,
+      })
+      setMaterials(res.data.materials || [])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await studyMaterialsApi.get({
-          query: searchQuery,
-          material_type: typeFilter === 'all' ? undefined : typeFilter,
-          subject_id: subjectFilter || undefined,
-        })
-        setMaterials(res.data.materials || [])
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
+    fetchMaterials()
   }, [searchQuery, typeFilter, subjectFilter])
+
+  const handleUpload = async (e) => {
+    e.preventDefault()
+    setUploadError(null)
+    setUploading(true)
+    const formData = new FormData(e.target)
+    try {
+      await studyMaterialsApi.create(formData)
+      setShowUpload(false)
+      fetchMaterials()
+    } catch (err) {
+      setUploadError(err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  // Need useEffect because we redefined it
 
   if (loading) {
     return (
@@ -126,6 +150,10 @@ export function StudyMaterialsPage() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Study Materials</h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>Browse and access academic resources</p>
         </div>
+        <button className="btn btn-primary" onClick={() => setShowUpload(true)}>
+          <Plus className="w-5 h-5" />
+          <span>Upload Material</span>
+        </button>
       </div>
 
       <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
@@ -174,6 +202,70 @@ export function StudyMaterialsPage() {
       ) : (
         <div className="grid grid-3">
           {materials.map(material => <MaterialCard key={material.id} material={material} />)}
+        </div>
+      )}
+
+      {showUpload && (
+        <div className="modal-overlay" onClick={() => setShowUpload(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Upload Material</h3>
+              <button className="btn-ghost" onClick={() => setShowUpload(false)}>
+                <ExternalLink className="w-5 h-5 rotate-90" />
+              </button>
+            </div>
+            <form ref={formRef} onSubmit={handleUpload} className="modal-content">
+              {uploadError && (
+                <div style={{ padding: '0.75rem', background: 'var(--color-danger-light, #fee2e2)', color: 'var(--color-danger)', borderRadius: 'var(--radius-sm)', marginBottom: '1rem' }}>
+                  {uploadError}
+                </div>
+              )}
+              <div className="form-group">
+                <label className="form-label">Subject</label>
+                <select name="subject_id" className="form-input" required>
+                  <option value="">Select subject</option>
+                  {[ 
+                    {id: '1', code: 'CS301', name: 'Database Systems'},
+                    {id: '2', code: 'CS302', name: 'Computer Networks'},
+                    {id: '3', code: 'CS303', name: 'Operating Systems'},
+                    {id: '4', code: 'MA201', name: 'Discrete Mathematics'},
+                    {id: '5', code: 'CS304', name: 'Software Engineering'},
+                  ].map(s => <option key={s.id} value={s.id}>{s.code} - {s.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Title</label>
+                <input name="title" className="form-input" placeholder="Material title" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Type</label>
+                <select name="material_type" className="form-input" required>
+                  {materialTypes.filter(t => t !== 'all').map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea name="description" className="form-input" rows={3} placeholder="Optional description" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">File</label>
+                <input type="file" name="file" className="form-input" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.jpg,.png,.zip" />
+                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
+                  Or provide an external link below. Max 10MB.
+                </p>
+              </div>
+              <div className="form-group">
+                <label className="form-label">External URL</label>
+                <input type="url" name="external_url" className="form-input" placeholder="https://..." />
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={() => setShowUpload(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={uploading}>
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Upload'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

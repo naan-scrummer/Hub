@@ -62,7 +62,7 @@ export const studyMaterialsApi = {
   get: (params) => api.get('/materials', { params }),
   getBySubject: (subjectId) => api.get(`/materials/subject/${subjectId}`),
   getById: (materialId) => api.get(`/materials/${materialId}`),
-  create: (data) => api.post('/materials', data),
+  create: (data) => api.post('/materials', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getMyUploads: () => api.get('/materials/my-uploads'),
 }
 
@@ -73,6 +73,7 @@ export const assignmentsApi = {
   update: (assignmentId, data) => api.patch(`/assignments/${assignmentId}`, data),
   complete: (assignmentId) => api.post(`/assignments/${assignmentId}/complete`),
   delete: (assignmentId) => api.delete(`/assignments/${assignmentId}`),
+  getMaterials: (assignmentId) => api.get(`/assignments/${assignmentId}/materials`),
 }
 
 export const remindersApi = {

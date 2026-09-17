@@ -8,6 +8,9 @@ from app.modules.assignments.service import AssignmentService
 from app.modules.assignments.repository import AssignmentRepository
 from app.modules.reminders.repository import ReminderRepository
 from app.modules.attendance.repository import SubjectRepository
+from app.modules.study_materials.service import StudyMaterialService
+from app.modules.study_materials.repository import StudyMaterialRepository
+from app.schemas.study_materials import StudyMaterialListResponse, StudyMaterialResponse
 from app.schemas.assignments import (
     AssignmentCreateRequest,
     AssignmentUpdateRequest,
@@ -204,3 +207,41 @@ async def get_assignments_by_subject(
             updated_at=a.updated_at,
         ))
     return responses
+
+
+@router.get("/{assignment_id}/materials", response_model=StudyMaterialListResponse)
+async def get_assignment_materials(
+    assignment_id: int,
+    profile: StudentProfile = Depends(get_current_student_profile),
+    assignment_service: AssignmentService = Depends(get_assignment_service),
+    db: AsyncSession = Depends(get_db),
+):
+    assignment = await assignment_service.get_by_id(assignment_id)
+    if not assignment or assignment.student_id != profile.id:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+
+    material_repo = StudyMaterialRepository(db)
+    material_service = StudyMaterialService(material_repo)
+    materials = await material_service.get_by_subject(assignment.subject_id)
+
+    subject_repo = SubjectRepository(db)
+    subject = await subject_repo.get_by_id(assignment.subject_id)
+
+    material_responses = []
+    for material in materials:
+        material_responses.append(StudyMaterialResponse(
+            id=material.id,
+            subject_id=material.subject_id,
+            subject_code=subject.code if subject else None,
+            subject_name=subject.name if subject else None,
+            title=material.title,
+            description=material.description,
+            material_type=material.material_type,
+            file_path=material.file_path,
+            external_url=material.external_url,
+            uploaded_by_student_id=material.uploaded_by_student_id,
+            is_approved=material.is_approved,
+            created_at=material.created_at,
+        ))
+
+    return StudyMaterialListResponse(materials=material_responses, total=len(material_responses))

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { assignmentsApi } from '../services/api'
 import { studyMaterialsApi } from '../services/api'
 import { format, formatDistanceToNow } from 'date-fns'
-import { ClipboardList, Plus, AlertTriangle, Loader2, CheckCircle, Clock, Trash2, Edit2, ExternalLink, Calendar } from 'lucide-react'
+import { ClipboardList, Plus, AlertTriangle, Loader2, CheckCircle, Clock, Trash2, Edit2, ExternalLink, Calendar, BookOpen } from 'lucide-react'
 
 const statusColors = {
   upcoming: 'badge-primary',
@@ -20,6 +20,24 @@ function AssignmentCard({ assignment, onUpdate, onDelete, onComplete, loadingIds
   const dueDate = new Date(assignment.due_date)
   const isOverdue = assignment.status === 'overdue'
   const isLoading = loadingIds.has(assignment.id)
+  const [materials, setMaterials] = useState(null)
+  const [loadingMaterials, setLoadingMaterials] = useState(false)
+
+  const handleToggleMaterials = async () => {
+    if (materials) {
+      setMaterials(null)
+      return
+    }
+    setLoadingMaterials(true)
+    try {
+      const res = await assignmentsApi.getMaterials(assignment.id)
+      setMaterials(res.data.materials || [])
+    } catch (err) {
+      console.error('Failed to load materials', err)
+    } finally {
+      setLoadingMaterials(false)
+    }
+  }
 
   return (
     <div className="card" style={{ padding: '1.25rem' }}>
@@ -72,8 +90,43 @@ function AssignmentCard({ assignment, onUpdate, onDelete, onComplete, loadingIds
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={handleToggleMaterials}
+            disabled={loadingMaterials}
+            title="Related Materials"
+          >
+            {loadingMaterials ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BookOpen className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
+
+      {materials && (
+        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Related Materials</h4>
+          {materials.length === 0 ? (
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>No related materials found.</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {materials.map(m => (
+                <li key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem', background: 'var(--color-background-alt)', borderRadius: 'var(--radius-sm)' }}>
+                  <span style={{ fontSize: '0.875rem' }}>{m.title}</span>
+                  {m.file_path && (
+                    <a href={m.file_path} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                  {m.external_url && (
+                    <a href={m.external_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   )
 }
