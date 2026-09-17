@@ -157,7 +157,24 @@ function ReminderFormModal({ onSubmit, onCancel, assignments, examinations, init
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSubmit(formData)
+    if (isEdit) {
+      const payload = {
+        title: formData.title,
+        description: formData.description || null,
+        trigger_time: formData.trigger_time ? new Date(formData.trigger_time).toISOString() : undefined,
+      }
+      onSubmit(payload)
+    } else {
+      const payload = {
+        title: formData.title,
+        description: formData.description || null,
+        trigger_type: formData.trigger_type,
+        trigger_time: new Date(formData.trigger_time).toISOString(),
+        assignment_id: formData.trigger_type === 'assignment_due' && formData.assignment_id ? Number(formData.assignment_id) : null,
+        examination_id: formData.trigger_type === 'examination' && formData.examination_id ? Number(formData.examination_id) : null,
+      }
+      onSubmit(payload)
+    }
   }
 
   return (
@@ -328,6 +345,7 @@ export function RemindersPage() {
     try {
       await remindersService.deleteReminder(id)
       setReminders(prev => prev.filter(r => r.id !== id))
+      await fetchData()
     } catch (err) {
       setError(err.message)
     } finally {

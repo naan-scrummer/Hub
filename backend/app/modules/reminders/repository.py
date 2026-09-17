@@ -66,18 +66,18 @@ class ReminderRepository:
 
     async def create(self, reminder: Reminder) -> Reminder:
         self.session.add(reminder)
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(reminder)
         return reminder
 
     async def update(self, reminder: Reminder) -> Reminder:
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(reminder)
         return reminder
 
     async def delete(self, reminder: Reminder) -> None:
         await self.session.delete(reminder)
-        await self.session.flush()
+        await self.session.commit()
 
     async def cancel_by_entity(
         self,
@@ -106,7 +106,7 @@ class ReminderRepository:
         for reminder in reminders:
             reminder.status = ReminderStatus.CANCELLED
             reminder.processed_at = now
-        await self.session.flush()
+        await self.session.commit()
         return len(reminders)
 
     async def update_automatic_trigger_times(
@@ -136,7 +136,7 @@ class ReminderRepository:
         reminders = list(result.scalars().all())
         for reminder in reminders:
             reminder.trigger_time = new_trigger_time
-        await self.session.flush()
+        await self.session.commit()
         return len(reminders)
 
     async def bulk_update_status(
@@ -151,5 +151,5 @@ class ReminderRepository:
         for reminder in reminders:
             reminder.status = status
             reminder.processed_at = processed_at
-        await self.session.flush()
+        await self.session.commit()
         return len(reminders)
