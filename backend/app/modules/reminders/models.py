@@ -12,6 +12,11 @@ class ReminderTriggerType(str, enum.Enum):
     CUSTOM = "custom"
 
 
+class ReminderOrigin(str, enum.Enum):
+    AUTOMATIC = "automatic"
+    CUSTOM = "custom"
+
+
 class ReminderStatus(str, enum.Enum):
     PENDING = "pending"
     PROCESSED = "processed"
@@ -29,6 +34,7 @@ class Reminder(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     trigger_type: Mapped[ReminderTriggerType] = mapped_column(default=ReminderTriggerType.CUSTOM, nullable=False)
     trigger_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    origin: Mapped[ReminderOrigin] = mapped_column(default=ReminderOrigin.CUSTOM, nullable=False)
     status: Mapped[ReminderStatus] = mapped_column(default=ReminderStatus.PENDING, nullable=False)
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

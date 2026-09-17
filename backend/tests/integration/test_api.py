@@ -146,9 +146,37 @@ async def test_reminders(client):
         "trigger_type": "custom",
         "trigger_time": "2025-12-31T23:59:00"
     })
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
     reminder = create_response.json()
     assert reminder["title"] == "Test Reminder"
+    assert reminder["origin"] == "custom"
+    assert reminder["status"] == "pending"
+    reminder_id = reminder["id"]
+
+    # Test GET single reminder
+    get_response = await client.get(f"/api/v1/reminders/{reminder_id}", headers=headers)
+    assert get_response.status_code == 200
+    assert get_response.json()["title"] == "Test Reminder"
+
+    # Test PATCH update reminder
+    patch_response = await client.patch(f"/api/v1/reminders/{reminder_id}", headers=headers, json={
+        "title": "Updated Reminder"
+    })
+    assert patch_response.status_code == 200
+    assert patch_response.json()["title"] == "Updated Reminder"
+
+    # Test status filter
+    filter_response = await client.get("/api/v1/reminders?status=PENDING", headers=headers)
+    assert filter_response.status_code == 200
+    assert isinstance(filter_response.json(), list)
+
+    # Test DELETE reminder
+    delete_response = await client.delete(f"/api/v1/reminders/{reminder_id}", headers=headers)
+    assert delete_response.status_code == 204
+
+    # Verify deleted
+    get_deleted = await client.get(f"/api/v1/reminders/{reminder_id}", headers=headers)
+    assert get_deleted.status_code == 404
 
 
 @pytest.mark.asyncio

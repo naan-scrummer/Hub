@@ -6,7 +6,9 @@ from app.db.base import get_db
 from app.api.dependencies.auth import get_current_student_profile
 from app.modules.assignments.service import AssignmentService
 from app.modules.assignments.repository import AssignmentRepository
+from app.modules.reminders.service import ReminderService
 from app.modules.reminders.repository import ReminderRepository
+from app.modules.notifications.repository import NotificationRepository
 from app.modules.attendance.repository import SubjectRepository
 from app.modules.study_materials.service import StudyMaterialService
 from app.modules.study_materials.repository import StudyMaterialRepository
@@ -28,7 +30,9 @@ logger = get_logger(__name__)
 def get_assignment_service(db: AsyncSession = Depends(get_db)) -> AssignmentService:
     assignment_repo = AssignmentRepository(db)
     reminder_repo = ReminderRepository(db)
-    return AssignmentService(assignment_repo, reminder_repo)
+    notification_repo = NotificationRepository(db)
+    reminder_service = ReminderService(reminder_repo, notification_repo)
+    return AssignmentService(assignment_repo, reminder_service)
 
 
 @router.get("", response_model=AssignmentListResponse)

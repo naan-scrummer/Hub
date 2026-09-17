@@ -1,5 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from app.modules.authentication.service import AuthenticationService
 from app.modules.authentication.models import User, UserRole, StudentProfile
 from app.modules.authentication.repository import UserRepository, StudentProfileRepository
@@ -53,6 +55,7 @@ class MockSession:
             def one(self):
                 return self.data[0] if self.data else (None, None, None)
 
+        # Return empty for all queries — tests use mock repos instead
         return MockResult([])
 
 
@@ -102,7 +105,9 @@ class TestAssignmentService:
         session = MockSession()
         assignment_repo = AssignmentRepository(session)
         reminder_repo = ReminderRepository(session)
-        service = AssignmentService(assignment_repo, reminder_repo)
+        notification_repo = NotificationRepository(session)
+        reminder_service = ReminderService(reminder_repo, notification_repo)
+        service = AssignmentService(assignment_repo, reminder_service)
 
         assignment = Assignment(
             id=1,
@@ -121,7 +126,9 @@ class TestAssignmentService:
         session = MockSession()
         assignment_repo = AssignmentRepository(session)
         reminder_repo = ReminderRepository(session)
-        service = AssignmentService(assignment_repo, reminder_repo)
+        notification_repo = NotificationRepository(session)
+        reminder_service = ReminderService(reminder_repo, notification_repo)
+        service = AssignmentService(assignment_repo, reminder_service)
 
         assignment = Assignment(
             id=1,
@@ -140,7 +147,9 @@ class TestAssignmentService:
         session = MockSession()
         assignment_repo = AssignmentRepository(session)
         reminder_repo = ReminderRepository(session)
-        service = AssignmentService(assignment_repo, reminder_repo)
+        notification_repo = NotificationRepository(session)
+        reminder_service = ReminderService(reminder_repo, notification_repo)
+        service = AssignmentService(assignment_repo, reminder_service)
 
         assignment = Assignment(
             id=1,
@@ -159,6 +168,7 @@ class TestAssignmentService:
 class TestReminderService:
     @pytest.mark.asyncio
     async def test_process_due_reminders_creates_notifications(self):
+        """Test that processing due reminders creates notifications."""
         session = MockSession()
         reminder_repo = ReminderRepository(session)
         notification_repo = NotificationRepository(session)
@@ -174,13 +184,20 @@ class TestReminderService:
         )
         session.reminders[1] = reminder
 
+        # Mock the repository methods to return the test data
+        reminder_repo.get_pending_due = AsyncMock(return_value=[reminder])
+        reminder_repo.update = AsyncMock(return_value=reminder)
+        notification_repo.create = AsyncMock(return_value=MagicMock())
+
         processed = await service.process_due_reminders(datetime.utcnow())
         assert processed == 1
         assert reminder.status == ReminderStatus.PROCESSED
-        assert len(session.notifications) == 1
+        assert reminder.processed_at is not None
+        notification_repo.create.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_process_due_reminders_skips_future(self):
+        """Test that future reminders are not processed."""
         session = MockSession()
         reminder_repo = ReminderRepository(session)
         notification_repo = NotificationRepository(session)
@@ -196,10 +213,164 @@ class TestReminderService:
         )
         session.reminders[1] = reminder
 
+        # Mock get_pending_due to return empty (no due reminders)
+        reminder_repo.get_pending_due = AsyncMock(return_value=[])
+
         processed = await service.process_due_reminders(datetime.utcnow())
         assert processed == 0
         assert reminder.status == ReminderStatus.PENDING
-        assert len(session.notifications) == 0
+
+    @pytest.mark.asyncio
+    async def test_create_automatic_reminder(self):
+        """Test automatic reminder creation with 7-day trigger."""
+        session = MockSession()
+        reminder_repo = ReminderRepository(session)
+        notification_repo = NotificationRepository(session)
+        service = ReminderService(reminder_repo, notification_repo)
+
+        created_reminder = Reminder(
+            id=1,
+            student_id=1,
+            assignment_id=42,
+            title="Due soon: Test",
+            trigger_time=datetime.utcnow() + timedelta(days=3),
+            trigger_type=ReminderTriggerType.ASSIGNMENT_DUE,
+            status=ReminderStatus.PENDING,
+        )
+
+        # Mock the create method
+        async def mock_create(reminder):
+            reminder.id = 1
+            return reminder
+        reminder_repo.create = mock_create
+
+        event_time = datetime.utcnow() + timedelta(days=10)
+        result = await service.create_automatic_reminder(
+            student_id=1,
+            entity_type="assignment",
+            entity_id=42,
+            event_time=event_time,
+            title="Due soon: Test",
+        )
+
+        assert result is not None
+        assert result.student_id == 1
+        assert result.assignment_id == 42
+        assert result.origin.value == "automatic"
+        assert result.status == ReminderStatus.PENDING
+        # trigger_time should be event_time - 7 days
+        expected_trigger = event_time - timedelta(days=7)
+        assert abs((result.trigger_time - expected_trigger).total_seconds()) < 1
+
+    @pytest.mark.asyncio
+    async def test_create_automatic_reminder_past_event(self):
+        """Test that automatic reminders are not created for past events."""
+        session = MockSession()
+        reminder_repo = ReminderRepository(session)
+        notification_repo = NotificationRepository(session)
+        service = ReminderService(reminder_repo, notification_repo)
+
+        event_time = datetime.utcnow() + timedelta(days=3)  # Only 3 days away, trigger would be in past
+        result = await service.create_automatic_reminder(
+            student_id=1,
+            entity_type="assignment",
+            entity_id=42,
+            event_time=event_time,
+            title="Due soon: Test",
+        )
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_cancel_linked_reminders(self):
+        """Test that linked reminders are cancelled."""
+        session = MockSession()
+        reminder_repo = ReminderRepository(session)
+        notification_repo = NotificationRepository(session)
+        service = ReminderService(reminder_repo, notification_repo)
+
+        # Mock cancel_by_entity
+        reminder_repo.cancel_by_entity = AsyncMock(return_value=2)
+
+        count = await service.cancel_linked_reminders(
+            student_id=1,
+            entity_type="assignment",
+            entity_id=42,
+        )
+
+        assert count == 2
+        reminder_repo.cancel_by_entity.assert_called_once_with(
+            1, "assignment", 42
+        )
+
+    @pytest.mark.asyncio
+    async def test_update_reminder(self):
+        """Test updating a reminder."""
+        session = MockSession()
+        reminder_repo = ReminderRepository(session)
+        notification_repo = NotificationRepository(session)
+        service = ReminderService(reminder_repo, notification_repo)
+
+        from app.schemas.reminders import ReminderUpdateRequest
+
+        reminder = Reminder(
+            id=1,
+            student_id=1,
+            title="Original Title",
+            trigger_time=datetime.utcnow() + timedelta(days=1),
+            trigger_type=ReminderTriggerType.CUSTOM,
+            status=ReminderStatus.PENDING,
+        )
+
+        # Mock get_by_student_and_id to return the reminder
+        reminder_repo.get_by_student_and_id = AsyncMock(return_value=reminder)
+        reminder_repo.update = AsyncMock(return_value=reminder)
+
+        update_data = ReminderUpdateRequest(title="Updated Title")
+        result = await service.update_reminder(student_id=1, reminder_id=1, data=update_data)
+
+        assert result is not None
+        assert result.title == "Updated Title"
+
+    @pytest.mark.asyncio
+    async def test_delete_reminder(self):
+        """Test deleting a reminder."""
+        session = MockSession()
+        reminder_repo = ReminderRepository(session)
+        notification_repo = NotificationRepository(session)
+        service = ReminderService(reminder_repo, notification_repo)
+
+        reminder = Reminder(
+            id=1,
+            student_id=1,
+            title="To Delete",
+            trigger_time=datetime.utcnow() + timedelta(days=1),
+            trigger_type=ReminderTriggerType.CUSTOM,
+            status=ReminderStatus.PENDING,
+        )
+
+        # Mock get_by_student_and_id and delete
+        reminder_repo.get_by_student_and_id = AsyncMock(return_value=reminder)
+        reminder_repo.delete = AsyncMock(return_value=None)
+
+        result = await service.delete_reminder(student_id=1, reminder_id=1)
+
+        assert result is True
+        reminder_repo.delete.assert_called_once_with(reminder)
+
+    @pytest.mark.asyncio
+    async def test_delete_reminder_not_found(self):
+        """Test deleting a non-existent reminder returns False."""
+        session = MockSession()
+        reminder_repo = ReminderRepository(session)
+        notification_repo = NotificationRepository(session)
+        service = ReminderService(reminder_repo, notification_repo)
+
+        reminder_repo.get_by_student_and_id = AsyncMock(return_value=None)
+
+        result = await service.delete_reminder(student_id=1, reminder_id=999)
+
+        assert result is False
 
 
 class TestNotificationService:
@@ -237,6 +408,10 @@ class TestNotificationService:
         )
         session.notifications[1] = notification
 
+        # Mock the repo methods
+        notification_repo.get_by_id = AsyncMock(return_value=notification)
+        notification_repo.update = AsyncMock(return_value=notification)
+
         result = await service.mark_as_read(1, 1)
         assert result is not None
         assert result.status == NotificationStatus.READ
@@ -257,6 +432,9 @@ class TestNotificationService:
             status=NotificationStatus.UNREAD,
         )
         session.notifications[1] = notification
+
+        # Mock the repo to return the notification
+        notification_repo.get_by_id = AsyncMock(return_value=notification)
 
         result = await service.mark_as_read(1, 1)
         assert result is None

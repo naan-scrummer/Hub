@@ -59,8 +59,8 @@ class NotificationRepository:
             from datetime import datetime
             notification.read_at = datetime.utcnow()
             await self.session.flush()
-            await self.session.refresh(notification)
-        return notification
+            return notification
+        return None
 
     async def mark_all_as_read(self, student_id: int) -> int:
         result = await self.session.execute(

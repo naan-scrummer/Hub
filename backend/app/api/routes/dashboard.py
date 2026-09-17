@@ -34,7 +34,9 @@ def get_dashboard_service(db: AsyncSession = Depends(get_db)) -> DashboardServic
     # Create all required services
     assignment_repo = AssignmentRepository(db)
     reminder_repo = ReminderRepository(db)
-    assignment_service = AssignmentService(assignment_repo, reminder_repo)
+    notification_repo_svc = NotificationRepository(db)
+    reminder_service_for_assign = ReminderService(reminder_repo, notification_repo_svc)
+    assignment_service = AssignmentService(assignment_repo, reminder_service_for_assign)
 
     exam_repo = ExaminationRepository(db)
     exam_service = ExaminationService(exam_repo)

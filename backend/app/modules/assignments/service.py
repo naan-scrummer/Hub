@@ -3,8 +3,7 @@ from datetime import datetime
 
 from app.modules.assignments.models import Assignment, AssignmentStatus
 from app.modules.assignments.repository import AssignmentRepository
-from app.modules.reminders.models import Reminder, ReminderTriggerType, ReminderStatus
-from app.modules.reminders.repository import ReminderRepository
+from app.modules.reminders.service import ReminderService
 from app.logging.config import get_logger
 
 
@@ -15,10 +14,10 @@ class AssignmentService:
     def __init__(
         self,
         assignment_repo: AssignmentRepository,
-        reminder_repo: ReminderRepository,
+        reminder_service: ReminderService,
     ):
         self.assignment_repo = assignment_repo
-        self.reminder_repo = reminder_repo
+        self.reminder_service = reminder_service
 
     async def get_by_id(self, assignment_id: int) -> Optional[Assignment]:
         return await self.assignment_repo.get_by_id(assignment_id)
@@ -56,20 +55,14 @@ class AssignmentService:
         )
         assignment = await self.assignment_repo.create(assignment)
 
-        # Create associated reminder (1 day before due date)
-        from datetime import timedelta
-        trigger_time = due_date - timedelta(days=1)
-        if trigger_time > datetime.utcnow():
-            reminder = Reminder(
-                student_id=student_id,
-                assignment_id=assignment.id,
-                title=f"Assignment due: {title}",
-                description=f"Reminder for assignment '{title}' due on {due_date.strftime('%Y-%m-%d %H:%M')}",
-                trigger_type=ReminderTriggerType.ASSIGNMENT_DUE,
-                trigger_time=trigger_time,
-                status=ReminderStatus.PENDING,
-            )
-            await self.reminder_repo.create(reminder)
+        # Create automatic reminder 7 days before due date (SCRUM 32 spec)
+        await self.reminder_service.create_automatic_reminder(
+            student_id=student_id,
+            entity_type="assignment",
+            entity_id=assignment.id,
+            event_time=due_date,
+            title=f"Due soon: {title}",
+        )
 
         logger.info("assignment_created", assignment_id=assignment.id, student_id=student_id)
         return assignment
@@ -78,16 +71,14 @@ class AssignmentService:
         old_due_date = assignment.due_date
         assignment = await self.assignment_repo.update(assignment)
 
-        # Update associated reminder if due date changed
+        # Update automatic reminders if due date shifted (SCRUM 32 spec)
         if assignment.due_date != old_due_date:
-            reminders = await self.reminder_repo.get_by_assignment(assignment.id)
-            from datetime import timedelta
-            new_trigger_time = assignment.due_date - timedelta(days=1)
-            for reminder in reminders:
-                if reminder.status == ReminderStatus.PENDING and new_trigger_time > datetime.utcnow():
-                    reminder.trigger_time = new_trigger_time
-                    reminder.description = f"Reminder for assignment '{assignment.title}' due on {assignment.due_date.strftime('%Y-%m-%d %H:%M')}"
-                    await self.reminder_repo.update(reminder)
+            await self.reminder_service.update_automatic_reminders_on_due_date_shift(
+                student_id=assignment.student_id,
+                entity_type="assignment",
+                entity_id=assignment.id,
+                new_event_time=assignment.due_date,
+            )
 
         return assignment
 
@@ -100,13 +91,12 @@ class AssignmentService:
         assignment.completed_at = datetime.utcnow()
         assignment = await self.assignment_repo.update(assignment)
 
-        # Cancel associated pending reminders
-        reminders = await self.reminder_repo.get_by_assignment(assignment.id)
-        for reminder in reminders:
-            if reminder.status == ReminderStatus.PENDING:
-                reminder.status = ReminderStatus.CANCELLED
-                reminder.processed_at = datetime.utcnow()
-                await self.reminder_repo.update(reminder)
+        # Cancel associated pending reminders (SCRUM 32 spec)
+        await self.reminder_service.cancel_linked_reminders(
+            student_id=student_id,
+            entity_type="assignment",
+            entity_id=assignment.id,
+        )
 
         logger.info("assignment_completed", assignment_id=assignment.id, student_id=student_id)
         return assignment
@@ -116,14 +106,12 @@ class AssignmentService:
         if not assignment or assignment.student_id != student_id:
             return False
 
-        # Cancel associated reminders instead of deleting them
-        # (ReminderRepository has no delete() method; cancelling avoids
-        # depending on a method that doesn't exist yet)
-        reminders = await self.reminder_repo.get_by_assignment(assignment.id)
-        for reminder in reminders:
-            reminder.status = ReminderStatus.CANCELLED
-            reminder.processed_at = datetime.utcnow()
-            await self.reminder_repo.update(reminder)
+        # Cancel associated reminders before deleting
+        await self.reminder_service.cancel_linked_reminders(
+            student_id=student_id,
+            entity_type="assignment",
+            entity_id=assignment.id,
+        )
 
         await self.assignment_repo.delete(assignment)
         logger.info("assignment_deleted", assignment_id=assignment_id, student_id=student_id)
