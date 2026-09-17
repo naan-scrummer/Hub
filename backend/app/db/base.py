@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -10,6 +13,18 @@ engine = create_async_engine(
     echo=settings.APP_ENV == "development",
     future=True,
 )
+
+
+if settings.DATABASE_URL.startswith("sqlite"):
+    @event.listens_for(engine.sync_engine, "connect")
+    def register_sqlite_now_function(dbapi_connection, _connection_record):
+        dbapi_connection.run_async(
+            lambda connection: connection.create_function(
+                "now",
+                0,
+                lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+            )
+        )
 
 async_session_maker = async_sessionmaker(
     engine,

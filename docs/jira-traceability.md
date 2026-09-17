@@ -59,3 +59,10 @@
 | SCRUM03-T-001 | Auth test coverage | Test | test_services.py, test_api.py | - | Implemented |
 | SCRUM03-T-002 | Assignments/reminders/notifications test | Test | test_services.py, test_e2e_workflows.py | - | Implemented |
 | SCRUM03-T-003 | Announcement feed test | Test | test_api.py, test_e2e_workflows.py | - | Implemented |
+
+## 2026-09-18 Verification Note
+
+- The CSV maps SCRUM-32 to the Reminders epic, SCRUM-33 to Notifications, SCRUM-85 to reminder-to-notification, and SCRUM-86 to the full assignment-to-notification E2E workflow. The supplied notification guide targets SCRUM-33 and SCRUM-82/83/84 instead.
+- Production wiring was reviewed: assignment creation creates automatic reminders, due-reminder processing generates notifications through the notification repository, the notification job is scheduler-registered, and the API/frontend notification center are connected.
+- Development notification seeding is idempotent and notification persistence failures now propagate instead of being suppressed.
+- Assignment-to-reminder scheduling was corrected to use a one-day lead time while retaining the generic seven-day reminder default. The focused assignment workflow and service tests pass (`19 passed`). The broader system run still has unrelated attendance-sync failures.

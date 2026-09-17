@@ -55,13 +55,14 @@ class AssignmentService:
         )
         assignment = await self.assignment_repo.create(assignment)
 
-        # Create automatic reminder 7 days before due date (SCRUM 32 spec)
+        # Create the assignment reminder one day before the due date.
         await self.reminder_service.create_automatic_reminder(
             student_id=student_id,
             entity_type="assignment",
             entity_id=assignment.id,
             event_time=due_date,
             title=f"Due soon: {title}",
+            lead_days=1,
         )
 
         logger.info("assignment_created", assignment_id=assignment.id, student_id=student_id)
@@ -72,13 +73,14 @@ class AssignmentService:
             old_due_date = assignment.due_date
         assignment = await self.assignment_repo.update(assignment)
 
-        # Update automatic reminders if due date shifted (SCRUM 32 spec)
+        # Keep the assignment reminder one day before the shifted due date.
         if assignment.due_date != old_due_date:
             await self.reminder_service.update_automatic_reminders_on_due_date_shift(
                 student_id=assignment.student_id,
                 entity_type="assignment",
                 entity_id=assignment.id,
                 new_event_time=assignment.due_date,
+                lead_days=1,
             )
 
         return assignment

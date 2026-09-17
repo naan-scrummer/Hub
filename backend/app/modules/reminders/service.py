@@ -115,12 +115,13 @@ class ReminderService:
         entity_id: int,
         event_time: datetime,
         title: str,
+        lead_days: int = 7,
     ) -> Optional[Reminder]:
-        """Create an AUTOMATIC reminder with trigger_time = event_time - 7 days.
+        """Create an AUTOMATIC reminder before the event.
 
         Returns None if the calculated trigger time is in the past.
         """
-        trigger_time = event_time - timedelta(days=7)
+        trigger_time = event_time - timedelta(days=lead_days)
 
         # Don't create reminders for events already in the past
         if trigger_time <= datetime.utcnow():
@@ -208,9 +209,10 @@ class ReminderService:
         entity_type: str,
         entity_id: int,
         new_event_time: datetime,
+        lead_days: int = 7,
     ) -> int:
         """Recalculate trigger times for AUTOMATIC reminders when due dates shift."""
-        new_trigger_time = new_event_time - timedelta(days=7)
+        new_trigger_time = new_event_time - timedelta(days=lead_days)
         return await self.reminder_repo.update_automatic_trigger_times(
             student_id, entity_type, entity_id, new_trigger_time
         )

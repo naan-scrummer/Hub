@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.db.base import async_session_maker, init_db
 from app.modules.authentication.models import User, StudentProfile, UserRole
@@ -167,7 +168,7 @@ async def seed_data(session: AsyncSession | None = None):
                     Examination.title == title,
                 )
             )
-            if not existing.scalar_one_or_none():
+            if not existing.scalars().first():
                 exam = Examination(
                     subject_id=subject_id,
                     title=title,
@@ -508,19 +509,27 @@ async def seed_data(session: AsyncSession | None = None):
         ]
 
         for source, source_id, title, message, status, p_status, read_at, created_at in notifications_data:
-            notification = Notification(
-                student_id=demo_profile.id,
-                source=source,
-                source_id=source_id,
-                title=title,
-                message=message,
-                status=status,
-                processing_status=p_status,
-                read_at=read_at,
-                created_at=created_at,
-                updated_at=created_at,
+            existing = await session.execute(
+                select(Notification).where(
+                    Notification.student_id == demo_profile.id,
+                    Notification.source == source,
+                    Notification.title == title,
+                )
             )
-            await notification_repo.create(notification)
+            if not existing.scalars().first():
+                notification = Notification(
+                    student_id=demo_profile.id,
+                    source=source,
+                    source_id=source_id,
+                    title=title,
+                    message=message,
+                    status=status,
+                    processing_status=p_status,
+                    read_at=read_at,
+                    created_at=created_at,
+                    updated_at=created_at,
+                )
+                await notification_repo.create(notification)
 
         logger.info("notifications_seeded", count=len(notifications_data))
 

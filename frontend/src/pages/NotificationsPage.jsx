@@ -29,12 +29,19 @@ const sourceColors = {
   placement: 'var(--color-secondary)',
 }
 
+function parseApiDate(value) {
+  if (!value) return new Date(NaN)
+  const timestamp = String(value)
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(timestamp)
+  return new Date(hasTimezone ? timestamp : `${timestamp}Z`)
+}
+
 function NotificationCard({ notification, onMarkRead, loadingIds }) {
   const normSource = (notification.source || '').toLowerCase()
   const normStatus = (notification.status || '').toLowerCase()
   const Icon = sourceIcons[normSource] || Bell
   const color = sourceColors[normSource] || 'var(--color-primary)'
-  const createdAt = new Date(notification.created_at)
+  const createdAt = parseApiDate(notification.created_at)
   const isLoading = loadingIds.has(notification.id)
 
   const formattedSource = normSource
