@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { examinationsApi } from '../services/api'
 import { format, formatDistanceToNow } from 'date-fns'
-import { FileText, RefreshCw, AlertTriangle, Calendar, Loader2, Clock } from 'lucide-react'
+import { FileText, RefreshCw, AlertTriangle, Calendar, Loader2, Clock, ExternalLink } from 'lucide-react'
 
 function ExamCard({ exam }) {
   const examDate = new Date(exam.exam_date)

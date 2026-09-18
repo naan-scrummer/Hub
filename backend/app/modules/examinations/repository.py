@@ -10,9 +10,6 @@ class ExaminationRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    def select(self, parameter: Examination):
-        return select(parameter)
-
     async def get_by_id(self, exam_id: int) -> Optional[Examination]:
         result = await self.session.execute(select(Examination).where(Examination.id == exam_id))
         return result.scalar_one_or_none()
@@ -42,9 +39,15 @@ class ExaminationRepository:
 
     async def bulk_upsert(self, exams: List[Examination]) -> List[Examination]:
         for exam in exams:
-            existing = await self.get_by_id(exam.id) if exam.id else None
+            result = await self.session.execute(
+                select(Examination).where(
+                    Examination.subject_id == exam.subject_id,
+                    Examination.title == exam.title,
+                )
+            )
+            existing = result.scalar_one_or_none()
+
             if existing:
-                existing.title = exam.title
                 existing.exam_type = exam.exam_type
                 existing.exam_date = exam.exam_date
                 existing.start_time = exam.start_time
@@ -55,7 +58,7 @@ class ExaminationRepository:
                 existing.source_sync_run_id = exam.source_sync_run_id
             else:
                 self.session.add(exam)
+
         await self.session.flush()
-        for exam in exams:
-            await self.session.refresh(exam)
+
         return exams
