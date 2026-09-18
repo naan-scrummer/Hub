@@ -135,7 +135,7 @@ function AssignmentForm({ assignment, onSubmit, onCancel, subjects }) {
     subject_id: assignment?.subject_id || '',
     title: assignment?.title || '',
     description: assignment?.description || '',
-    due_date: assignment?.due_date ? new Date(assignment.due_date).toISOString().slice(0, 16) : '',
+    due_date: assignment?.due_date ? String(assignment.due_date).slice(0, 16) : '',
   })
 
   const handleSubmit = (e) => {
