@@ -163,7 +163,7 @@ async def seed_data(session: AsyncSession | None = None):
 
         for subject_id, title, exam_type, exam_date, end_time, venue in exam_data:
             existing = await session.execute(
-                exam_repo.select(Examination).where(
+                select(Examination).where(
                     Examination.subject_id == subject_id,
                     Examination.title == title,
                 )
@@ -212,7 +212,7 @@ async def seed_data(session: AsyncSession | None = None):
 
         for source_id, ref, title, content, category, published_at in announcements_data:
             existing = await session.execute(
-                ann_repo.select(Announcement).where(
+                select(Announcement).where(
                     Announcement.source_id == source_id,
                     Announcement.source_reference == ref,
                 )
@@ -257,7 +257,7 @@ async def seed_data(session: AsyncSession | None = None):
 
         for company_id, title, desc, eligibility, location, package, deadline, status in opportunities_data:
             existing = await session.execute(
-                opp_repo.select(PlacementOpportunity).where(
+                select(PlacementOpportunity).where(
                     PlacementOpportunity.company_id == company_id,
                     PlacementOpportunity.title == title,
                 )
@@ -288,7 +288,7 @@ async def seed_data(session: AsyncSession | None = None):
 
         for subject_id, title, desc, m_type, file_path, url in materials_data:
             existing = await session.execute(
-                material_repo.select(StudyMaterial).where(
+                select(StudyMaterial).where(
                     StudyMaterial.subject_id == subject_id,
                     StudyMaterial.title == title,
                 )
@@ -334,7 +334,7 @@ async def seed_data(session: AsyncSession | None = None):
 
         # Fetch exams for reminder references
         exams_result = await session.execute(
-            exam_repo.select(Examination).where(Examination.subject_id == subjects[0].id)
+            select(Examination).where(Examination.subject_id == subjects[0].id)
         )
         exams_list = list(exams_result.scalars().all())
 
