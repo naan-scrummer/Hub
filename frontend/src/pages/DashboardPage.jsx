@@ -625,7 +625,10 @@ function SectionCard({
   )
 }
 
+import { useAuth } from '../contexts/AuthContext'
+
 export function DashboardPage() {
+  const { user } = useAuth()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -633,7 +636,7 @@ export function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await dashboardApi.get()
+        const response = user?.role === 'teacher' ? await dashboardApi.getTeacher() : await dashboardApi.get()
         setData(response.data)
       } catch (err) {
         setError(err.message)
@@ -643,7 +646,7 @@ export function DashboardPage() {
     }
 
     fetchData()
-  }, [])
+  }, [user?.role])
 
   if (loading) {
     return (
@@ -706,6 +709,44 @@ export function DashboardPage() {
     placement_opportunities = [],
     unavailable_sections = [],
   } = data || {}
+
+  if (user?.role === 'teacher') {
+    return (
+      <div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+            Teacher Dashboard
+          </h1>
+          <p style={{ color: 'var(--color-text-secondary)' }}>
+            Overview of your classes and tasks
+          </p>
+        </div>
+
+        <div className="grid grid-3" style={{ marginBottom: '1.5rem' }}>
+          <StatCard
+            title="Total Students"
+            value={data?.total_students || 0}
+            icon={GraduationCap}
+            loading={false}
+          />
+          <StatCard
+            title="Pending Placements"
+            value={data?.pending_placements_count || 0}
+            icon={Briefcase}
+            trend={data?.pending_placements_count > 0 ? "Needs Review" : "All clear"}
+            trendUp={data?.pending_placements_count === 0}
+            loading={false}
+          />
+          <StatCard
+            title="Active Assignments"
+            value={data?.active_coding_assignments || 0}
+            icon={FileText}
+            loading={false}
+          />
+        </div>
+      </div>
+    )
+  }
 
   const isUnavailable = (section) =>
     unavailable_sections.includes(section)

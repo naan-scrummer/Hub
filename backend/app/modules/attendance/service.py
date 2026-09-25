@@ -56,3 +56,26 @@ class AttendanceService:
             last_synced_at=datetime.utcnow(),
             source_sync_run_id=sync_run_id,
         )
+
+from datetime import date
+from app.modules.attendance.models import DailyAttendance, AttendanceStatus
+from app.modules.attendance.repository import DailyAttendanceRepository
+
+class DailyAttendanceService:
+    def __init__(self, daily_repo: DailyAttendanceRepository):
+        self.daily_repo = daily_repo
+
+    async def get_daily_summary(self, student_id: int) -> dict:
+        return await self.daily_repo.get_summary_by_student(student_id)
+
+    async def get_daily_attendance_by_date(self, date_val: date) -> List[DailyAttendance]:
+        return await self.daily_repo.get_by_date(date_val)
+
+    async def mark_attendance(self, student_id: int, date_val: date, status: AttendanceStatus, teacher_id: Optional[int] = None) -> DailyAttendance:
+        record = DailyAttendance(
+            student_id=student_id,
+            date=date_val,
+            status=status,
+            teacher_id=teacher_id
+        )
+        return await self.daily_repo.upsert(record)

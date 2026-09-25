@@ -73,6 +73,10 @@ async def seed_data(session: AsyncSession | None = None):
         demo_profile = await profile_repo.get_by_user_id(demo_user.id)
         logger.info("demo_user_ready", user_id=demo_user.id, profile_id=demo_profile.id)
 
+        # Create demo teacher
+        demo_teacher = await auth_service.create_demo_teacher()
+        logger.info("demo_teacher_ready", user_id=demo_teacher.id)
+
         # Create subjects
         subjects_data = [
             {"code": "CS301", "name": "Database Systems", "department": "Computer Science", "credits": 4},

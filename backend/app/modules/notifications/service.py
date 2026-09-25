@@ -93,20 +93,43 @@ class NotificationService:
             student_id=student_id, status=status_enum, limit=limit, offset=offset
         )
 
+    async def get_teacher_notifications(
+        self,
+        teacher_id: int,
+        status: Optional[Union[NotificationStatus, str]] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> List[Notification]:
+        status_enum = None
+        if status:
+            if isinstance(status, NotificationStatus):
+                status_enum = status
+            elif isinstance(status, str) and status.lower() != "all":
+                try:
+                    status_enum = NotificationStatus(status)
+                except ValueError:
+                    status_enum = None
+        return await self.notification_repo.get_by_teacher(
+            teacher_id=teacher_id, status=status_enum, limit=limit, offset=offset
+        )
+
+    async def get_teacher_unread_count(self, teacher_id: int) -> int:
+        return await self.notification_repo.get_teacher_unread_count(teacher_id)
+
     async def get_unread_count(self, student_id: int) -> int:
         return await self.notification_repo.get_unread_count(student_id)
 
-    async def mark_as_read(self, notification_id: int, student_id: int) -> Optional[Notification]:
-        return await self.notification_repo.mark_as_read(notification_id, student_id)
+    async def mark_as_read(self, notification_id: int, profile_id: int, is_teacher: bool = False) -> Optional[Notification]:
+        return await self.notification_repo.mark_as_read(notification_id, profile_id, is_teacher)
 
-    async def mark_notification_read(self, notification_id: int, student_id: int) -> Optional[Notification]:
-        return await self.mark_as_read(notification_id, student_id)
+    async def mark_notification_read(self, notification_id: int, profile_id: int, is_teacher: bool = False) -> Optional[Notification]:
+        return await self.mark_as_read(notification_id, profile_id, is_teacher)
 
-    async def mark_all_as_read(self, student_id: int) -> int:
-        return await self.notification_repo.mark_all_as_read(student_id)
+    async def mark_all_as_read(self, profile_id: int, is_teacher: bool = False) -> int:
+        return await self.notification_repo.mark_all_as_read(profile_id, is_teacher)
 
-    async def mark_all_notifications_read(self, student_id: int) -> int:
-        return await self.mark_all_as_read(student_id)
+    async def mark_all_notifications_read(self, profile_id: int, is_teacher: bool = False) -> int:
+        return await self.mark_all_as_read(profile_id, is_teacher)
 
     async def process_pending_notifications_batch(self, limit: int = 100) -> int:
         """

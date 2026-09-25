@@ -10,12 +10,9 @@ export function AuthProvider({ children }) {
 
   const fetchUser = useCallback(async () => {
     try {
-      const [userRes, profileRes] = await Promise.all([
-        authApi.me(),
-        authApi.profile(),
-      ])
+      const userRes = await authApi.me()
       setUser(userRes.data)
-      setProfile(profileRes.data)
+      setProfile(userRes.data.profile || null)
     } catch (error) {
       setUser(null)
       setProfile(null)

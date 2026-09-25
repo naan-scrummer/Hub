@@ -106,6 +106,15 @@ class PlacementContributionRepository:
         result = await self.session.execute(
             select(PlacementContribution)
             .where(PlacementContribution.is_published == True)
+            .where(PlacementContribution.status == "APPROVED")
+            .order_by(PlacementContribution.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def get_pending(self) -> List[PlacementContribution]:
+        result = await self.session.execute(
+            select(PlacementContribution)
+            .where(PlacementContribution.status == "PENDING")
             .order_by(PlacementContribution.created_at.desc())
         )
         return list(result.scalars().all())

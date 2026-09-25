@@ -22,6 +22,7 @@ import {
   CheckCircle,
   Clock,
   TrendingUp,
+  Code,
 } from 'lucide-react'
 
 const navigation = [
@@ -33,12 +34,13 @@ const navigation = [
   { name: 'Placements', href: '/placements', icon: Briefcase },
   { name: 'Study Materials', href: '/materials', icon: BookOpen },
   { name: 'Assignments', href: '/assignments', icon: ClipboardList },
+  { name: 'Coding', href: '/coding', icon: Code },
   { name: 'Reminders', href: '/reminders', icon: Bell },
   { name: 'Notifications', href: '/notifications', icon: Mail },
 ]
 
 export function Layout() {
-  const { profile, logout } = useAuth()
+  const { user, profile, logout } = useAuth()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -48,8 +50,25 @@ export function Layout() {
   }
 
   const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'
   }
+
+  const studentNav = navigation
+  const teacherNav = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Students', href: '/students', icon: User },
+    { name: 'Attendance', href: '/attendance', icon: Calendar },
+    { name: 'Announcements', href: '/announcements', icon: Megaphone },
+    { name: 'Assignments', href: '/assignments', icon: ClipboardList },
+    { name: 'Coding', href: '/coding', icon: Code },
+    { name: 'Placements', href: '/placements', icon: Briefcase },
+    { name: 'Notifications', href: '/notifications', icon: Mail },
+  ]
+  const currentNav = user?.role === 'teacher' ? teacherNav : studentNav
+
+  const displayName = user?.full_name || 'User'
+  const displayId = profile?.student_id || profile?.employee_id || ''
+  const displaySubtitle = profile?.department || user?.role || ''
 
   return (
     <div className="app-layout">
@@ -70,7 +89,7 @@ export function Layout() {
         </div>
 
         <nav className="sidebar-nav" aria-label="Primary">
-          {navigation.map((item) => (
+          {currentNav.map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
@@ -87,14 +106,14 @@ export function Layout() {
         <div className="sidebar-footer">
           <div className="user-menu">
             <div className="user-avatar" aria-hidden="true">
-              {profile ? getInitials(profile.student_id) : 'ST'}
+              {getInitials(displayName)}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {profile?.student_id || 'Student'}
+                {displayName}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {profile?.department || 'Department'}
+                {displaySubtitle} {displayId ? `(${displayId})` : ''}
               </div>
             </div>
             <button className="btn-ghost btn-sm" onClick={handleLogout} aria-label="Log out">

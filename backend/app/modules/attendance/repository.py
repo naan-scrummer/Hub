@@ -76,6 +76,7 @@ class AttendanceRepository:
         return record
 
     async def bulk_upsert(self, records: List[AttendanceRecord]) -> List[AttendanceRecord]:
+        processed_records = []
         for record in records:
             existing = await self.get_by_student_and_subject(record.student_id, record.subject_id)
             if existing:
@@ -84,12 +85,14 @@ class AttendanceRepository:
                 existing.attendance_percentage = record.attendance_percentage
                 existing.last_synced_at = record.last_synced_at
                 existing.source_sync_run_id = record.source_sync_run_id
+                processed_records.append(existing)
             else:
                 self.session.add(record)
+                processed_records.append(record)
         await self.session.flush()
-        for record in records:
+        for record in processed_records:
             await self.session.refresh(record)
-        return records
+        return processed_records
 
     async def get_summary_for_student(self, student_id: int) -> dict:
         result = await self.session.execute(
@@ -110,3 +113,63 @@ class AttendanceRepository:
             "subjects_count": subject_count or 0,
             "records": [],
         }
+
+from datetime import date
+from app.modules.attendance.models import DailyAttendance
+
+class DailyAttendanceRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_student_and_date(self, student_id: int, date_val: date) -> Optional[DailyAttendance]:
+        result = await self.session.execute(
+            select(DailyAttendance).where(
+                DailyAttendance.student_id == student_id,
+                DailyAttendance.date == date_val
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_date(self, date_val: date) -> List[DailyAttendance]:
+        result = await self.session.execute(
+            select(DailyAttendance)
+            .where(DailyAttendance.date == date_val)
+        )
+        return list(result.scalars().all())
+        
+    async def get_history_by_student(self, student_id: int) -> List[DailyAttendance]:
+        result = await self.session.execute(
+            select(DailyAttendance).where(
+                DailyAttendance.student_id == student_id
+            ).order_by(DailyAttendance.date.desc())
+        )
+        return list(result.scalars().all())
+        
+    async def get_summary_by_student(self, student_id: int) -> dict:
+        history = await self.get_history_by_student(student_id)
+        total_classes = len(history)
+        present = sum(1 for r in history if r.status.value == "present")
+        absent = total_classes - present
+        percentage = (present / total_classes * 100) if total_classes > 0 else 0.0
+        
+        return {
+            "total_classes": total_classes,
+            "present": present,
+            "absent": absent,
+            "attendance_percentage": round(percentage, 2),
+            "history": history
+        }
+        
+    async def upsert(self, attendance: DailyAttendance) -> DailyAttendance:
+        existing = await self.get_by_student_and_date(attendance.student_id, attendance.date)
+        if existing:
+            existing.status = attendance.status
+            existing.teacher_id = attendance.teacher_id
+            await self.session.flush()
+            await self.session.refresh(existing)
+            return existing
+        else:
+            self.session.add(attendance)
+            await self.session.flush()
+            await self.session.refresh(attendance)
+            return attendance

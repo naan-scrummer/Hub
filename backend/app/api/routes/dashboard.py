@@ -83,3 +83,14 @@ async def get_dashboard(
 ):
     data = await dashboard_service.get_dashboard_data(profile)
     return DashboardDataResponse(**data)
+
+from app.api.dependencies.auth import get_current_teacher
+from app.modules.authentication.models import User
+
+@router.get("/teacher")
+async def get_teacher_dashboard(
+    teacher: User = Depends(get_current_teacher),
+    dashboard_service: DashboardService = Depends(get_dashboard_service),
+):
+    data = await dashboard_service.get_teacher_dashboard_data(teacher)
+    return data

@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.authentication.models import User, StudentProfile
@@ -13,11 +14,19 @@ class UserRepository:
         return select(parameter)
 
     async def get_by_id(self, user_id: int) -> Optional[User]:
-        result = await self.session.execute(select(User).where(User.id == user_id))
+        result = await self.session.execute(
+            select(User)
+            .options(joinedload(User.student_profile), joinedload(User.teacher_profile))
+            .where(User.id == user_id)
+        )
         return result.scalar_one_or_none()
 
     async def get_by_email(self, email: str) -> Optional[User]:
-        result = await self.session.execute(select(User).where(User.email == email))
+        result = await self.session.execute(
+            select(User)
+            .options(joinedload(User.student_profile), joinedload(User.teacher_profile))
+            .where(User.email == email)
+        )
         return result.scalar_one_or_none()
 
     async def create(self, user: User) -> User:
@@ -61,3 +70,39 @@ class StudentProfileRepository:
         await self.session.flush()
         await self.session.refresh(profile)
         return profile
+
+    async def get_all(self) -> list[StudentProfile]:
+        from sqlalchemy.orm import joinedload
+        result = await self.session.execute(
+            select(StudentProfile).options(joinedload(StudentProfile.user))
+        )
+        return list(result.scalars().all())
+
+
+from app.modules.authentication.models import TeacherProfile
+
+class TeacherProfileRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    def select(self, parameter: TeacherProfile):
+        return select(parameter)
+
+    async def get_by_id(self, profile_id: int) -> Optional[TeacherProfile]:
+        result = await self.session.execute(select(TeacherProfile).where(TeacherProfile.id == profile_id))
+        return result.scalar_one_or_none()
+
+    async def get_by_user_id(self, user_id: int) -> Optional[TeacherProfile]:
+        result = await self.session.execute(select(TeacherProfile).where(TeacherProfile.user_id == user_id))
+        return result.scalar_one_or_none()
+
+    async def create(self, profile: TeacherProfile) -> TeacherProfile:
+        self.session.add(profile)
+        await self.session.flush()
+        await self.session.refresh(profile)
+        return profile
+
+    async def update(self, profile: TeacherProfile) -> TeacherProfile:
+        await self.session.flush()
+        await self.session.refresh(profile)
+        return profile

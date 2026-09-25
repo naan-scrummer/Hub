@@ -65,12 +65,22 @@ def get_sync_service(db: AsyncSession = Depends(get_db)):
     )
 
 
+from app.api.dependencies.auth import get_current_user, get_current_teacher_profile
+from app.modules.authentication.models import User, TeacherProfile
+from pydantic import BaseModel, Field
+
+class AnnouncementCreateRequest(BaseModel):
+    title: str
+    content: str
+    category: str = Field(..., description="e.g. academic, event, placement")
+    source_id: Optional[int] = None
+
 @router.get("", response_model=AnnouncementListResponse)
 async def get_announcements(
     category: Optional[str] = None,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    profile: StudentProfile = Depends(get_current_student_profile),
+    current_user: User = Depends(get_current_user),
     announcement_service: AnnouncementService = Depends(get_announcement_service),
 ):
     if category:
@@ -82,7 +92,7 @@ async def get_announcements(
 
     ann_responses = []
     for ann in announcements:
-        source = await announcement_service.source_repo.get_by_id(ann.source_id)
+        source = await announcement_service.source_repo.get_by_id(ann.source_id) if ann.source_id else None
         ann_responses.append(AnnouncementResponse(
             id=ann.id,
             source_id=ann.source_id,
@@ -104,7 +114,7 @@ async def get_announcements(
 
 @router.get("/sources", response_model=List[AnnouncementSourceResponse])
 async def get_announcement_sources(
-    profile: StudentProfile = Depends(get_current_student_profile),
+    current_user: User = Depends(get_current_user),
     announcement_service: AnnouncementService = Depends(get_announcement_service),
 ):
     sources = await announcement_service.get_active_sources()
@@ -114,7 +124,7 @@ async def get_announcement_sources(
 @router.post("/sync")
 async def sync_announcements(
     request: AnnouncementSyncRequest,
-    profile: StudentProfile = Depends(get_current_student_profile),
+    current_user: User = Depends(get_current_user),
     sync_service = Depends(get_sync_service),
     announcement_service: AnnouncementService = Depends(get_announcement_service),
 ):
@@ -124,3 +134,37 @@ async def sync_announcements(
 
     sync_run = await sync_service.sync_announcements(source)
     return {"message": "Announcements synchronized", "sync_run_id": sync_run.id, "status": sync_run.status.value}
+
+
+@router.post("", response_model=AnnouncementResponse)
+async def create_announcement(
+    request: AnnouncementCreateRequest,
+    profile: TeacherProfile = Depends(get_current_teacher_profile),
+    announcement_service: AnnouncementService = Depends(get_announcement_service),
+):
+    from app.modules.announcements.models import Announcement
+    from datetime import datetime, UTC
+    
+    announcement = Announcement(
+        title=request.title,
+        content=request.content,
+        category=request.category,
+        source_id=request.source_id,
+        published_at=datetime.now(UTC),
+    )
+    
+    saved_ann = await announcement_service.announcement_repo.create(announcement)
+    
+    source = await announcement_service.source_repo.get_by_id(saved_ann.source_id) if saved_ann.source_id else None
+    
+    return AnnouncementResponse(
+        id=saved_ann.id,
+        source_id=saved_ann.source_id,
+        source_name=source.name if source else "Teacher Announcement",
+        source_reference=saved_ann.source_reference,
+        title=saved_ann.title,
+        content=saved_ann.content,
+        category=saved_ann.category,
+        published_at=saved_ann.published_at,
+        is_unavailable=False,
+    )

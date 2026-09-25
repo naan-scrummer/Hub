@@ -227,3 +227,22 @@ class DashboardService:
 
     async def update_widget(self, widget: DashboardWidget) -> DashboardWidget:
         return await self.widget_repo.update(widget)
+
+    async def get_teacher_dashboard_data(self, teacher) -> dict:
+        from app.modules.assignments.repository import CodingAssignmentRepository
+        coding_repo = CodingAssignmentRepository(self.widget_repo.session)
+        coding_assignments = await coding_repo.get_by_teacher(teacher.id)
+
+        pending_contributions = await self.placement_service.get_pending_contributions()
+
+        from app.modules.authentication.repository import StudentProfileRepository
+        student_repo = StudentProfileRepository(self.widget_repo.session)
+        all_students = await student_repo.get_all()
+
+        return {
+            "total_students": len(all_students),
+            "pending_placements_count": len(pending_contributions),
+            "active_coding_assignments": len(coding_assignments),
+            "pending_contributions": pending_contributions[:5],
+            "coding_assignments": coding_assignments[:5]
+        }

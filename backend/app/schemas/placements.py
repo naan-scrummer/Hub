@@ -40,6 +40,8 @@ class PlacementContributionResponse(BaseModel):
     content: str
     contribution_type: str
     is_published: bool
+    status: str
+    rejection_reason: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -59,6 +61,10 @@ class PlacementContributionCreateRequest(BaseModel):
     title: str
     content: str
     contribution_type: str
+
+class PlacementContributionReviewRequest(BaseModel):
+    status: str  # 'APPROVED' or 'REJECTED'
+    rejection_reason: Optional[str] = None
 
 class PlacementSyncRequest(BaseModel):
     pass

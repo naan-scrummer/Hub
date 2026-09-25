@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
 from app.db.base import get_db
-from app.api.dependencies.auth import get_current_student_profile
+from app.api.dependencies.auth import get_current_student_profile, get_current_user
 from app.modules.placements.service import PlacementService
 from app.modules.placements.repository import CompanyRepository, PlacementOpportunityRepository, PlacementContributionRepository
 from app.schemas.placements import (
@@ -14,7 +14,7 @@ from app.schemas.placements import (
     PlacementContributionListResponse,
     PlacementContributionCreateRequest,
 )
-from app.modules.authentication.models import StudentProfile
+from app.modules.authentication.models import StudentProfile, User
 from app.logging.config import get_logger
 
 
@@ -70,7 +70,7 @@ def get_sync_service(db: AsyncSession = Depends(get_db)):
 
 @router.get("/opportunities", response_model=PlacementOpportunityListResponse)
 async def get_opportunities(
-    profile: StudentProfile = Depends(get_current_student_profile),
+    user: User = Depends(get_current_user),
     placement_service: PlacementService = Depends(get_placement_service),
 ):
     opportunities = await placement_service.get_open_opportunities()
@@ -97,7 +97,7 @@ async def get_opportunities(
 
 @router.get("/contributions", response_model=PlacementContributionListResponse)
 async def get_contributions(
-    profile: StudentProfile = Depends(get_current_student_profile),
+    user: User = Depends(get_current_user),
     placement_service: PlacementService = Depends(get_placement_service),
 ):
     contributions = await placement_service.get_published_contributions()
@@ -114,6 +114,8 @@ async def get_contributions(
             content=contrib.content,
             contribution_type=contrib.contribution_type,
             is_published=contrib.is_published,
+            status=contrib.status,
+            rejection_reason=contrib.rejection_reason,
             created_at=contrib.created_at,
         ))
 
@@ -139,10 +141,90 @@ async def get_my_contributions(
             content=contrib.content,
             contribution_type=contrib.contribution_type,
             is_published=contrib.is_published,
+            status=contrib.status,
+            rejection_reason=contrib.rejection_reason,
             created_at=contrib.created_at,
         ))
 
     return PlacementContributionListResponse(contributions=contrib_responses)
+
+
+from app.api.dependencies.auth import get_current_teacher
+from app.modules.authentication.models import User
+from app.schemas.placements import PlacementContributionReviewRequest
+
+@router.get("/teacher/contributions/pending", response_model=PlacementContributionListResponse)
+async def get_pending_contributions(
+    teacher: User = Depends(get_current_teacher),
+    placement_service: PlacementService = Depends(get_placement_service)
+):
+    contributions = await placement_service.get_pending_contributions()
+    contrib_responses = []
+    for contrib in contributions:
+        company = await placement_service.company_repo.get_by_id(contrib.company_id)
+        contrib_responses.append(PlacementContributionResponse(
+            id=contrib.id,
+            student_id=contrib.student_id,
+            company_id=contrib.company_id,
+            company_name=company.name if company else None,
+            title=contrib.title,
+            content=contrib.content,
+            contribution_type=contrib.contribution_type,
+            is_published=contrib.is_published,
+            status=contrib.status,
+            rejection_reason=contrib.rejection_reason,
+            created_at=contrib.created_at,
+        ))
+    return PlacementContributionListResponse(contributions=contrib_responses)
+
+from app.modules.notifications.service import NotificationService
+from app.modules.notifications.repository import NotificationRepository
+
+def get_notification_service(db: AsyncSession = Depends(get_db)) -> NotificationService:
+    return NotificationService(NotificationRepository(db))
+
+@router.post("/teacher/contributions/{contribution_id}/review", response_model=PlacementContributionResponse)
+async def review_contribution(
+    contribution_id: int,
+    request: PlacementContributionReviewRequest,
+    teacher: User = Depends(get_current_teacher),
+    placement_service: PlacementService = Depends(get_placement_service),
+    notification_service: NotificationService = Depends(get_notification_service)
+):
+    contribution = await placement_service.review_contribution(
+        contribution_id, 
+        status=request.status, 
+        teacher_id=teacher.id, 
+        rejection_reason=request.rejection_reason
+    )
+    if not contribution:
+        raise HTTPException(status_code=404, detail="Contribution not found")
+        
+    company = await placement_service.company_repo.get_by_id(contribution.company_id)
+    
+    # Notify student
+    await notification_service.create(
+        student_id=contribution.student_id,
+        source="placement",
+        source_id=contribution.id,
+        title=f"Placement Contribution {request.status}",
+        message=f"Your placement contribution for {company.name if company else 'a company'} was {request.status.lower()}." + 
+                (f" Reason: {request.rejection_reason}" if request.status == "REJECTED" else "")
+    )
+    
+    return PlacementContributionResponse(
+        id=contribution.id,
+        student_id=contribution.student_id,
+        company_id=contribution.company_id,
+        company_name=company.name if company else None,
+        title=contribution.title,
+        content=contribution.content,
+        contribution_type=contribution.contribution_type,
+        is_published=contribution.is_published,
+        status=contribution.status,
+        rejection_reason=contribution.rejection_reason,
+        created_at=contribution.created_at,
+    )
 
 
 @router.post("/contributions", response_model=PlacementContributionResponse)
@@ -170,13 +252,51 @@ async def create_contribution(
         content=contribution.content,
         contribution_type=contribution.contribution_type,
         is_published=contribution.is_published,
+        status=contribution.status,
+        rejection_reason=contribution.rejection_reason,
+        created_at=contribution.created_at,
+    )
+@router.put("/contributions/{contribution_id}", response_model=PlacementContributionResponse)
+async def update_contribution(
+    contribution_id: int,
+    request: PlacementContributionCreateRequest,
+    profile: StudentProfile = Depends(get_current_student_profile),
+    placement_service: PlacementService = Depends(get_placement_service),
+):
+    contribution = await placement_service.contrib_repo.get_by_id(contribution_id)
+    if not contribution or contribution.student_id != profile.id:
+        raise HTTPException(status_code=404, detail="Contribution not found")
+
+    if contribution.status == "APPROVED":
+        raise HTTPException(status_code=400, detail="Cannot edit an approved contribution")
+
+    contribution.company_id = request.company_id
+    contribution.title = request.title
+    contribution.content = request.content
+    contribution.contribution_type = request.contribution_type
+    contribution.status = "PENDING"
+    
+    await placement_service.contrib_repo.update(contribution)
+    
+    company = await placement_service.company_repo.get_by_id(contribution.company_id)
+    return PlacementContributionResponse(
+        id=contribution.id,
+        student_id=contribution.student_id,
+        company_id=contribution.company_id,
+        company_name=company.name if company else None,
+        title=contribution.title,
+        content=contribution.content,
+        contribution_type=contribution.contribution_type,
+        is_published=contribution.is_published,
+        status=contribution.status,
+        rejection_reason=contribution.rejection_reason,
         created_at=contribution.created_at,
     )
 
 
 @router.post("/sync")
 async def sync_placements(
-    profile: StudentProfile = Depends(get_current_student_profile),
+    user: User = Depends(get_current_user),
     sync_service = Depends(get_sync_service),
 ):
     sync_run = await sync_service.sync_placements()

@@ -57,8 +57,9 @@ async def test_notifications_list_authenticated(client):
     )
     assert resp.status_code == 200
     data = resp.json()
-    # Response is a list of notification objects
-    assert isinstance(data, list)
+    # Response is an object with 'notifications' list and 'unread_count'
+    assert isinstance(data.get("notifications"), list)
+    assert "unread_count" in data
 
 
 @pytest.mark.asyncio
@@ -70,7 +71,8 @@ async def test_notifications_list_contains_seeded_data(client):
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
-    items = resp.json()
+    data = resp.json()
+    items = data.get("notifications", [])
     assert len(items) > 0, "Expected seeded notifications; list is empty"
 
     # Every notification belongs to a valid source category
@@ -92,7 +94,8 @@ async def test_mark_notification_as_read(client):
     token = await _get_token(client)
     headers = {"Authorization": f"Bearer {token}"}
 
-    notifications = (await client.get("/api/v1/notifications", headers=headers)).json()
+    data = (await client.get("/api/v1/notifications", headers=headers)).json()
+    notifications = data.get("notifications", [])
     unread = [n for n in notifications if n["status"] == NotificationStatus.UNREAD.value]
     assert unread, "No unread notifications found to test mark-as-read"
 
@@ -101,7 +104,8 @@ async def test_mark_notification_as_read(client):
     assert resp.status_code == 200
 
     # Re-fetch and verify status changed
-    refreshed = (await client.get("/api/v1/notifications", headers=headers)).json()
+    refreshed_data = (await client.get("/api/v1/notifications", headers=headers)).json()
+    refreshed = refreshed_data.get("notifications", [])
     updated = next((n for n in refreshed if n["id"] == notif_id), None)
     assert updated is not None
     assert updated["status"] == NotificationStatus.READ.value, \
@@ -117,7 +121,8 @@ async def test_mark_all_notifications_as_read(client):
     resp = await client.post("/api/v1/notifications/read-all", headers=headers)
     assert resp.status_code == 200
 
-    refreshed = (await client.get("/api/v1/notifications", headers=headers)).json()
+    refreshed_data = (await client.get("/api/v1/notifications", headers=headers)).json()
+    refreshed = refreshed_data.get("notifications", [])
     unread_after = [n for n in refreshed if n["status"] == NotificationStatus.UNREAD.value]
     assert len(unread_after) == 0, \
         f"Expected 0 unread after mark-all-read; found {len(unread_after)}"
@@ -188,7 +193,8 @@ async def test_assignment_reminder_notification_pipeline(client, test_session):
     token = await _get_token(client)
     headers = {"Authorization": f"Bearer {token}"}
 
-    notifications = (await client.get("/api/v1/notifications", headers=headers)).json()
+    data = (await client.get("/api/v1/notifications", headers=headers)).json()
+    notifications = data.get("notifications", [])
 
     assignment_notifs = [
         n for n in notifications
