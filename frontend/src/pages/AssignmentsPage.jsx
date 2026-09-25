@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { assignmentsApi, attendanceApi } from '../services/api'
 import { format, formatDistanceToNow } from 'date-fns'
 import { ClipboardList, Plus, AlertTriangle, Loader2, CheckCircle, Clock, Trash2, Edit2, ExternalLink, Calendar, BookOpen } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 const statusColors = {
   upcoming: 'badge-primary',
@@ -181,6 +182,7 @@ function AssignmentForm({ assignment, onSubmit, onCancel, subjects }) {
 }
 
 export function AssignmentsPage() {
+  const { user } = useAuth()
   const [assignments, setAssignments] = useState({ upcoming: [], overdue: [], completed: [] })
   const [subjects, setSubjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -301,10 +303,12 @@ export function AssignmentsPage() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Assignments</h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>Manage your academic tasks and deadlines</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditingAssignment(null); setShowForm(true) }}>
-          <Plus className="w-5 h-5" />
-          <span>New Assignment</span>
-        </button>
+        {user?.role === 'teacher' && (
+          <button className="btn btn-primary" onClick={() => { setEditingAssignment(null); setShowForm(true) }}>
+            <Plus className="w-5 h-5" />
+            <span>New Assignment</span>
+          </button>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem', overflowX: 'auto' }}>
@@ -325,7 +329,7 @@ export function AssignmentsPage() {
           <ClipboardList className="w-12 h-12" />
           <h3>No Assignments</h3>
           <p>{activeTab === 'upcoming' ? 'No upcoming assignments' : activeTab === 'overdue' ? 'No overdue assignments' : 'No completed assignments'}</p>
-          {activeTab !== 'completed' && (
+          {activeTab !== 'completed' && user?.role === 'teacher' && (
             <button className="btn btn-primary" onClick={() => { setEditingAssignment(null); setShowForm(true) }} style={{ marginTop: '1rem' }}>
               <Plus className="w-5 h-5" />
               <span>Create Assignment</span>

@@ -40,7 +40,14 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = auth_service.create_access_token({"sub": str(user.id), "email": user.email, "role": user.role.value})
+    from app.modules.authentication.models import UserRole
+    token_data = {"sub": str(user.id), "email": user.email, "role": user.role.value}
+    if user.role == UserRole.STUDENT and user.student_profile:
+        token_data["student_id"] = user.student_profile.student_id
+    elif user.role == UserRole.TEACHER and user.teacher_profile:
+        token_data["employee_id"] = user.teacher_profile.employee_id
+
+    access_token = auth_service.create_access_token(token_data)
     refresh_token = auth_service.create_refresh_token({"sub": str(user.id), "email": user.email})
 
     logger.info("login_success", user_id=user.id, email=user.email)
@@ -63,13 +70,20 @@ async def refresh_token(
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    return UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        role=current_user.role.value,
-        is_active=current_user.is_active,
-    )
+    profile = None
+    if current_user.role == UserRole.STUDENT:
+        profile = current_user.student_profile
+    elif current_user.role == UserRole.TEACHER:
+        profile = current_user.teacher_profile
+        
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "role": current_user.role.value,
+        "is_active": current_user.is_active,
+        "profile": profile,
+    }
 
 
 @router.get("/profile", response_model=StudentProfileResponse)
@@ -87,3 +101,29 @@ async def get_student_profile(profile = Depends(get_current_student_profile)):
 async def logout():
     # Client-side token removal; server-side token blacklist could be added
     return {"message": "Successfully logged out"}
+
+from sqlalchemy import select
+from app.modules.authentication.models import UserRole
+from app.api.dependencies.auth import get_current_teacher
+
+@router.get("/students", response_model=list[UserResponse])
+async def get_all_students(
+    db: AsyncSession = Depends(get_db),
+    teacher: User = Depends(get_current_teacher)  # RBAC Hardening: Only teachers
+):
+    from sqlalchemy.orm import joinedload
+    result = await db.execute(
+        select(User)
+        .options(joinedload(User.student_profile))
+        .where(User.role == UserRole.STUDENT)
+    )
+    return [
+        {
+            "id": u.id,
+            "email": u.email,
+            "full_name": u.full_name,
+            "role": u.role.value,
+            "is_active": u.is_active,
+            "profile": u.student_profile,
+        } for u in result.scalars().all()
+    ]

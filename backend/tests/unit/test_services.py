@@ -98,6 +98,70 @@ class TestAuthenticationService:
         payload = auth_service.decode_token("invalid.token.here")
         assert payload is None
 
+    @pytest.mark.asyncio
+    async def test_authenticate_valid_credentials(self, auth_service):
+        user = User(
+            id=1,
+            email="test@test.com",
+            hashed_password=auth_service.get_password_hash("password123"),
+            is_active=True
+        )
+        auth_service.user_repo.get_by_email = AsyncMock(return_value=user)
+        result = await auth_service.authenticate("test@test.com", "password123")
+        assert result is not None
+        assert result.id == 1
+
+    @pytest.mark.asyncio
+    async def test_authenticate_invalid_password(self, auth_service):
+        user = User(
+            id=1,
+            email="test@test.com",
+            hashed_password=auth_service.get_password_hash("password123"),
+            is_active=True
+        )
+        auth_service.user_repo.get_by_email = AsyncMock(return_value=user)
+        result = await auth_service.authenticate("test@test.com", "wrongpassword")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_authenticate_nonexistent_user(self, auth_service):
+        auth_service.user_repo.get_by_email = AsyncMock(return_value=None)
+        result = await auth_service.authenticate("test@test.com", "password123")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_valid_token(self, auth_service):
+        token = auth_service.create_access_token({"sub": "1", "email": "test@test.com"})
+        user = User(id=1, email="test@test.com")
+        auth_service.user_repo.get_by_id = AsyncMock(return_value=user)
+        
+        result = await auth_service.get_current_user(token)
+        assert result is not None
+        assert result.id == 1
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_invalid_token(self, auth_service):
+        result = await auth_service.get_current_user("invalid.token")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_refresh_access_token_valid(self, auth_service):
+        refresh_token = auth_service.create_refresh_token({"sub": "1", "email": "test@test.com"})
+        user = User(id=1, email="test@test.com", is_active=True, role=UserRole.STUDENT)
+        auth_service.user_repo.get_by_id = AsyncMock(return_value=user)
+        
+        new_access_token = await auth_service.refresh_access_token(refresh_token)
+        assert new_access_token is not None
+        
+        payload = auth_service.decode_token(new_access_token)
+        assert payload["type"] == "access"
+        assert payload["sub"] == "1"
+
+    @pytest.mark.asyncio
+    async def test_refresh_access_token_invalid(self, auth_service):
+        new_access_token = await auth_service.refresh_access_token("invalid.token")
+        assert new_access_token is None
+
 
 class TestAssignmentService:
     @pytest.mark.asyncio

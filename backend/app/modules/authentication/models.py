@@ -9,6 +9,7 @@ from app.db.base import Base
 
 class UserRole(str, enum.Enum):
     STUDENT = "student"
+    TEACHER = "teacher"
     ADMIN = "admin"
 
 
@@ -28,6 +29,9 @@ class User(Base):
 
     student_profile: Mapped["StudentProfile | None"] = relationship(
         "StudentProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    teacher_profile: Mapped["TeacherProfile | None"] = relationship(
+        "TeacherProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
 
 
@@ -59,3 +63,18 @@ class StudentProfile(Base):
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification", back_populates="student", cascade="all, delete-orphan"
     )
+
+
+class TeacherProfile(Base):
+    __tablename__ = "teacher_profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+    employee_id: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    department: Mapped[str] = mapped_column(String(100), nullable=False)
+    designation: Mapped[str] = mapped_column(String(100), nullable=False)
+    office_location: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="teacher_profile")

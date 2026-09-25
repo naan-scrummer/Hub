@@ -144,3 +144,68 @@ async def sync_attendance(
 
     sync_run = await sync_service.sync_attendance(profile.id)
     return {"message": "Attendance synchronized", "sync_run_id": sync_run.id, "status": sync_run.status.value}
+
+
+# Daily Attendance Routes
+
+from app.api.dependencies.auth import get_current_teacher
+from app.modules.authentication.models import User
+from app.schemas.attendance import DailyAttendanceCreate, DailyAttendanceResponse, DailyAttendanceSummary, DailyAttendanceStudentResponse
+from datetime import date
+from app.modules.attendance.service import DailyAttendanceService
+from app.modules.attendance.repository import DailyAttendanceRepository
+from app.modules.attendance.repository import DailyAttendanceRepository
+
+def get_daily_attendance_service(db: AsyncSession = Depends(get_db)) -> DailyAttendanceService:
+    repo = DailyAttendanceRepository(db)
+    return DailyAttendanceService(repo)
+
+@router.post("/daily", response_model=DailyAttendanceResponse)
+async def mark_daily_attendance(
+    request: DailyAttendanceCreate,
+    teacher: User = Depends(get_current_teacher),
+    service: DailyAttendanceService = Depends(get_daily_attendance_service)
+):
+    return await service.mark_attendance(
+        student_id=request.student_id,
+        date_val=request.date,
+        status=request.status,
+        teacher_id=teacher.id
+    )
+
+@router.get("/daily/summary", response_model=DailyAttendanceSummary)
+async def get_daily_attendance_summary(
+    profile: StudentProfile = Depends(get_current_student_profile),
+    service: DailyAttendanceService = Depends(get_daily_attendance_service)
+):
+    return await service.get_daily_summary(profile.id)
+
+
+@router.get("/daily/date/{date_val}", response_model=List[DailyAttendanceStudentResponse])
+async def get_daily_attendance_by_date(
+    date_val: date,
+    teacher: User = Depends(get_current_teacher),
+    service: DailyAttendanceService = Depends(get_daily_attendance_service),
+    db: AsyncSession = Depends(get_db)
+):
+    # Fetch all student profiles
+    from app.modules.authentication.repository import StudentProfileRepository
+    profile_repo = StudentProfileRepository(db)
+    all_students = await profile_repo.get_all()
+    
+    # Fetch today's marked attendance
+    daily_attendances = await service.get_daily_attendance_by_date(date_val)
+    attendance_map = {att.student_id: att.status for att in daily_attendances}
+    
+    # Combine
+    result = []
+    for s in all_students:
+        result.append({
+            "student_id": s.id,
+            "user_id": s.user_id,
+            "student_registration_id": s.student_id,
+            "name": s.user.full_name,
+            "email": s.user.email,
+            "status": attendance_map.get(s.id)
+        })
+    return result

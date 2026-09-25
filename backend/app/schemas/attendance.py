@@ -40,3 +40,40 @@ class AttendanceSummaryResponse(BaseModel):
 
 class AttendanceSyncRequest(BaseModel):
     student_id: int
+
+from datetime import date
+from app.modules.attendance.models import AttendanceStatus
+
+class DailyAttendanceCreate(BaseModel):
+    student_id: int
+    date: date
+    status: AttendanceStatus
+
+class DailyAttendanceResponse(BaseModel):
+    id: int
+    student_id: int
+    teacher_id: Optional[int]
+    date: date
+    status: AttendanceStatus
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class DailyAttendanceSummary(BaseModel):
+    total_classes: int
+    present: int
+    absent: int
+    attendance_percentage: float
+    history: List[DailyAttendanceResponse]
+
+class DailyAttendanceStudentResponse(BaseModel):
+    student_id: int
+    user_id: int
+    student_registration_id: str
+    name: str
+    email: str
+    status: Optional[AttendanceStatus] = None
+
+    class Config:
+        from_attributes = True

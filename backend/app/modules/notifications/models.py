@@ -57,7 +57,8 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    student_id: Mapped[int] = mapped_column(ForeignKey("student_profiles.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id: Mapped[int | None] = mapped_column(ForeignKey("student_profiles.id", ondelete="CASCADE"), nullable=True, index=True)
+    teacher_id: Mapped[int | None] = mapped_column(ForeignKey("teacher_profiles.id", ondelete="CASCADE"), nullable=True, index=True)
     source: Mapped[NotificationSource] = mapped_column(nullable=False, index=True)
     source_id: Mapped[int | None] = mapped_column(nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -75,3 +76,4 @@ class Notification(Base):
     )
 
     student: Mapped["StudentProfile"] = relationship("StudentProfile", back_populates="notifications")
+    teacher: Mapped["TeacherProfile"] = relationship("TeacherProfile", foreign_keys=[teacher_id])

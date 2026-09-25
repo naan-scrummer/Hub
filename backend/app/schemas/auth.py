@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from typing import Literal, Union, Annotated
+from pydantic import BaseModel, EmailStr, Field
 
 
 class LoginRequest(BaseModel):
@@ -16,16 +17,14 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
-class UserResponse(BaseModel):
+class BaseUserResponse(BaseModel):
     id: int
     email: str
     full_name: str
-    role: str
     is_active: bool
 
     class Config:
         from_attributes = True
-
 
 class StudentProfileResponse(BaseModel):
     id: int
@@ -36,3 +35,28 @@ class StudentProfileResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class TeacherProfileResponse(BaseModel):
+    id: int
+    employee_id: str
+    department: str
+    designation: str
+    office_location: str | None
+
+    class Config:
+        from_attributes = True
+
+class StudentUserResponse(BaseUserResponse):
+    role: Literal["student"]
+    profile: StudentProfileResponse | None = None
+
+class TeacherUserResponse(BaseUserResponse):
+    role: Literal["teacher"]
+    profile: TeacherProfileResponse | None = None
+
+class AdminUserResponse(BaseUserResponse):
+    role: Literal["admin"]
+
+UserResponse = Annotated[Union[StudentUserResponse, TeacherUserResponse, AdminUserResponse], Field(discriminator="role")]
+
+

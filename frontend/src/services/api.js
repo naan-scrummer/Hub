@@ -11,7 +11,10 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.detail || error.message || 'An error occurred'
+    let message = error.response?.data?.detail || error.message || 'An error occurred'
+    if (Array.isArray(message)) {
+      message = message.map(m => typeof m === 'object' ? m.msg || JSON.stringify(m) : m).join(', ')
+    }
     return Promise.reject(new Error(message))
   }
 )
@@ -21,10 +24,12 @@ export const authApi = {
   refresh: (refreshToken) => api.post('/auth/refresh', { refresh_token: refreshToken }),
   me: () => api.get('/auth/me'),
   profile: () => api.get('/auth/profile'),
+  getStudents: () => api.get('/auth/students'),
 }
 
 export const dashboardApi = {
   get: () => api.get('/dashboard'),
+  getTeacher: () => api.get('/dashboard/teacher'),
 }
 
 export const attendanceApi = {
@@ -32,6 +37,9 @@ export const attendanceApi = {
   getSummary: () => api.get('/attendance/summary'),
   getSubject: (subjectId) => api.get(`/attendance/${subjectId}`),
   sync: (studentId) => api.post('/attendance/sync', { student_id: studentId }),
+  markDaily: (data) => api.post('/attendance/daily', data),
+  getDailyByDate: (date) => api.get(`/attendance/daily/date/${date}`),
+  getDailySummary: () => api.get('/attendance/daily/summary'),
 }
 
 export const academicsApi = {
@@ -48,6 +56,7 @@ export const announcementsApi = {
   get: (params) => api.get('/announcements', { params }),
   getSources: () => api.get('/announcements/sources'),
   sync: (sourceId) => api.post('/announcements/sync', { source_id: sourceId }),
+  create: (data) => api.post('/announcements', data),
 }
 
 export const placementsApi = {
@@ -56,6 +65,9 @@ export const placementsApi = {
   getMyContributions: () => api.get('/placements/my-contributions'),
   createContribution: (data) => api.post('/placements/contributions', data),
   sync: () => api.post('/placements/sync', {}),
+  getPendingContributions: () => api.get('/placements/teacher/contributions/pending'),
+  reviewContribution: (contributionId, data) => api.post(`/placements/teacher/contributions/${contributionId}/review`, data),
+  updateContribution: (contributionId, data) => api.put(`/placements/contributions/${contributionId}`, data),
 }
 
 export const studyMaterialsApi = {
@@ -74,6 +86,13 @@ export const assignmentsApi = {
   complete: (assignmentId) => api.post(`/assignments/${assignmentId}/complete`),
   delete: (assignmentId) => api.delete(`/assignments/${assignmentId}`),
   getMaterials: (assignmentId) => api.get(`/assignments/${assignmentId}/materials`),
+  createCoding: (data) => api.post('/assignments/coding', data),
+  deleteCoding: (id) => api.delete(`/assignments/coding/${id}`),
+  getCoding: () => api.get('/assignments/coding'),
+  getCodingById: (id) => api.get(`/assignments/coding/${id}`),
+  submitCoding: (data) => api.post('/assignments/coding/submit', data),
+  getCodingSubmissions: (id) => api.get(`/assignments/coding/${id}/submissions`),
+  getCodingSubmissionsForTeacher: (id) => api.get(`/assignments/teacher/coding/${id}/submissions`),
 }
 
 export const remindersApi = {

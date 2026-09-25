@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { announcementsApi } from '../services/api'
 import { format, formatDistanceToNow } from 'date-fns'
-import { Megaphone, RefreshCw, AlertTriangle, Loader2, Filter, ChevronDown } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { Megaphone, RefreshCw, AlertTriangle, Plus, X } from 'lucide-react'
 
 const categories = ['all', 'examination', 'administrative', 'event', 'department', 'academic']
+const createCategories = ['examination', 'administrative', 'event', 'department', 'academic']
 
 function AnnouncementCard({ announcement }) {
   const pubDate = announcement.published_at ? new Date(announcement.published_at) : null
@@ -20,7 +22,7 @@ function AnnouncementCard({ announcement }) {
               {pubDate ? formatDistanceToNow(pubDate, { addSuffix: true }) : 'Date Unknown'}
             </time>
           </div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>{announcement.content}</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem', whiteSpace: 'pre-wrap' }}>{announcement.content}</p>
           <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
             Source: {announcement.source_name || 'Unknown'}
             {announcement.source_reference && ` • Ref: ${announcement.source_reference}`}
@@ -32,6 +34,7 @@ function AnnouncementCard({ announcement }) {
 }
 
 export function AnnouncementsPage() {
+  const { user } = useAuth()
   const [announcements, setAnnouncements] = useState([])
   const [sources, setSources] = useState([])
   const [loading, setLoading] = useState(true)
@@ -39,21 +42,26 @@ export function AnnouncementsPage() {
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all')
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [annRes, srcRes] = await Promise.all([
-          announcementsApi.get(),
-          announcementsApi.getSources(),
-        ])
-        setAnnouncements(annRes.data.announcements || [])
-        setSources(srcRes.data || [])
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
+  const [isCreating, setIsCreating] = useState(false)
+  const [createData, setCreateData] = useState({ title: '', content: '', category: 'academic' })
+  const [creating, setCreating] = useState(false)
+
+  const fetchData = async () => {
+    try {
+      const [annRes, srcRes] = await Promise.all([
+        announcementsApi.get(),
+        announcementsApi.getSources(),
+      ])
+      setAnnouncements(annRes.data.announcements || [])
+      setSources(srcRes.data || [])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchData()
   }, [])
 
@@ -62,12 +70,27 @@ export function AnnouncementsPage() {
     setError(null)
     try {
       await announcementsApi.sync(sourceId)
-      const annRes = await announcementsApi.get()
-      setAnnouncements(annRes.data.announcements || [])
+      await fetchData()
     } catch (err) {
       setError(err.message)
     } finally {
       setSyncing(false)
+    }
+  }
+
+  const handleCreate = async (e) => {
+    e.preventDefault()
+    setCreating(true)
+    setError(null)
+    try {
+      await announcementsApi.create(createData)
+      setIsCreating(false)
+      setCreateData({ title: '', content: '', category: 'academic' })
+      await fetchData()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -106,6 +129,12 @@ export function AnnouncementsPage() {
           <p style={{ color: 'var(--color-text-secondary)' }}>College notices, department updates, and events</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {user?.role === 'teacher' && (
+            <button className="btn btn-primary btn-sm" onClick={() => setIsCreating(true)}>
+              <Plus className="w-4 h-4" />
+              <span>New</span>
+            </button>
+          )}
           {sources.map(source => (
             <button
               key={source.id}
@@ -131,6 +160,36 @@ export function AnnouncementsPage() {
           </button>
         ))}
       </div>
+
+      {isCreating && (
+        <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem', border: '1px solid var(--color-primary)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h3 style={{ fontWeight: 600 }}>Create New Announcement</h3>
+            <button className="btn-ghost btn-sm" onClick={() => setIsCreating(false)}>
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <form onSubmit={handleCreate}>
+            <div className="form-group">
+              <label className="form-label">Title</label>
+              <input required type="text" className="form-input" value={createData.title} onChange={e => setCreateData({ ...createData, title: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Category</label>
+              <select className="form-input" value={createData.category} onChange={e => setCreateData({ ...createData, category: e.target.value })}>
+                {createCategories.map(cat => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Content</label>
+              <textarea required className="form-input" rows="4" value={createData.content} onChange={e => setCreateData({ ...createData, content: e.target.value })} />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={creating}>
+              {creating ? 'Publishing...' : 'Publish Announcement'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {filteredAnnouncements.length === 0 ? (
         <div className="empty-state">

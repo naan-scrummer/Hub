@@ -29,6 +29,9 @@ class PlacementService:
     async def get_published_contributions(self) -> List[PlacementContribution]:
         return await self.contribution_repo.get_published()
 
+    async def get_pending_contributions(self) -> List[PlacementContribution]:
+        return await self.contribution_repo.get_pending()
+
     async def get_student_contributions(self, student_id: int) -> List[PlacementContribution]:
         return await self.contribution_repo.get_by_student(student_id)
 
@@ -45,6 +48,22 @@ class PlacementService:
         return await self.contribution_repo.create(contribution)
 
     async def update_contribution(self, contribution: PlacementContribution) -> PlacementContribution:
+        return await self.contribution_repo.update(contribution)
+
+    async def review_contribution(self, contribution_id: int, status: str, teacher_id: int, rejection_reason: Optional[str] = None) -> Optional[PlacementContribution]:
+        contribution = await self.contribution_repo.get_by_id(contribution_id)
+        if not contribution:
+            return None
+            
+        contribution.status = status
+        contribution.reviewed_by = teacher_id
+        contribution.reviewed_at = datetime.utcnow()
+        if status == "REJECTED":
+            contribution.rejection_reason = rejection_reason
+            contribution.is_published = False
+        elif status == "APPROVED":
+            contribution.is_published = True
+            
         return await self.contribution_repo.update(contribution)
 
     def create_opportunity_from_data(
@@ -87,4 +106,5 @@ class PlacementService:
             content=content,
             contribution_type=contribution_type,
             is_published=is_published,
+            status="PENDING",
         )

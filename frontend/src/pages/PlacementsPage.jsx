@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { placementsApi } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 import { format, formatDistanceToNow } from 'date-fns'
-import { Briefcase, RefreshCw, AlertTriangle, Loader2, Plus, ExternalLink, Building, MapPin, DollarSign, Calendar } from 'lucide-react'
+import { Briefcase, RefreshCw, AlertTriangle, Loader2, Plus, ExternalLink, Building, MapPin, DollarSign, Calendar, X, CheckCircle } from 'lucide-react'
 
 function OpportunityCard({ opportunity }) {
   return (
@@ -54,9 +55,16 @@ function OpportunityCard({ opportunity }) {
   )
 }
 
-function ContributionCard({ contribution }) {
+function ContributionCard({ contribution, isMine, onResubmit }) {
+  const getStatusBadge = () => {
+    if (contribution.status === 'APPROVED') return <span className="badge badge-success">Approved</span>
+    if (contribution.status === 'REJECTED') return <span className="badge badge-danger">Rejected</span>
+    if (contribution.status === 'PENDING') return <span className="badge badge-warning">Pending Review</span>
+    return <span className="badge badge-secondary">{contribution.is_published ? 'Published' : 'Draft'}</span>
+  }
+
   return (
-    <div className="card" style={{ padding: '1.25rem' }}>
+    <div className="card" style={{ padding: '1.25rem', borderLeft: contribution.status === 'REJECTED' ? '4px solid var(--color-danger)' : 'none' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
         <div>
           <h3 style={{ fontWeight: 600, color: 'var(--color-text)' }}>{contribution.title}</h3>
@@ -64,27 +72,48 @@ function ContributionCard({ contribution }) {
             {contribution.contribution_type} • {contribution.company_name || 'Unknown Company'}
           </p>
         </div>
-        <span className={`badge ${contribution.is_published ? 'badge-success' : 'badge-secondary'}`}>
-          {contribution.is_published ? 'Published' : 'Draft'}
-        </span>
+        {getStatusBadge()}
       </div>
       <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>{contribution.content}</p>
-      <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-        {formatDistanceToNow(new Date(contribution.created_at), { addSuffix: true })}
-      </p>
+      
+      {contribution.status === 'REJECTED' && contribution.rejection_reason && (
+        <div style={{ padding: '0.75rem', backgroundColor: 'var(--color-background-soft)', borderRadius: 'var(--radius-sm)', marginBottom: '0.75rem' }}>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-danger)', fontWeight: 500, marginBottom: '0.25rem' }}>Rejection Reason:</p>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text)' }}>{contribution.rejection_reason}</p>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+          {formatDistanceToNow(new Date(contribution.created_at), { addSuffix: true })}
+        </p>
+        {isMine && contribution.status === 'REJECTED' && onResubmit && (
+          <button className="btn btn-outline btn-sm" onClick={() => onResubmit(contribution)}>
+            Edit & Resubmit
+          </button>
+        )}
+      </div>
     </div>
   )
 }
 
 export function PlacementsPage() {
+  const { user } = useAuth()
+  const isTeacher = user?.role === 'teacher'
+  
   const [opportunities, setOpportunities] = useState([])
   const [contributions, setContributions] = useState([])
   const [myContributions, setMyContributions] = useState([])
+  const [pendingContributions, setPendingContributions] = useState([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [activeTab, setActiveTab] = useState('opportunities')
   const [showContributionForm, setShowContributionForm] = useState(false)
+  const [editingContributionId, setEditingContributionId] = useState(null)
   const [error, setError] = useState(null)
+  
+  // For teacher review form
+  const [reviewForm, setReviewForm] = useState({ show: false, contributionId: null, status: 'APPROVED', reason: '' })
 
   const [formData, setFormData] = useState({
     company_id: '',
@@ -96,14 +125,26 @@ export function PlacementsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [oppRes, contribRes, myContribRes] = await Promise.all([
+        const promises = [
           placementsApi.getOpportunities(),
           placementsApi.getContributions(),
-          placementsApi.getMyContributions(),
-        ])
-        setOpportunities(oppRes.data.opportunities || [])
-        setContributions(contribRes.data.contributions || [])
-        setMyContributions(myContribRes.data.contributions || [])
+        ]
+        
+        if (!isTeacher) {
+          promises.push(placementsApi.getMyContributions())
+        } else {
+          promises.push(placementsApi.getPendingContributions())
+        }
+        
+        const results = await Promise.all(promises)
+        setOpportunities(results[0].data.opportunities || [])
+        setContributions(results[1].data.contributions || [])
+        
+        if (!isTeacher) {
+          setMyContributions(results[2].data.contributions || [])
+        } else {
+          setPendingContributions(results[2].data.contributions || [])
+        }
       } catch (err) {
         setError(err.message)
       } finally {
@@ -111,7 +152,7 @@ export function PlacementsPage() {
       }
     }
     fetchData()
-  }, [])
+  }, [isTeacher])
 
   const handleSync = async () => {
     setSyncing(true)
@@ -127,14 +168,51 @@ export function PlacementsPage() {
     }
   }
 
+  const handleResubmit = (contribution) => {
+    setEditingContributionId(contribution.id)
+    setFormData({
+      company_id: contribution.company_id || '',
+      title: contribution.title,
+      content: contribution.content,
+      contribution_type: contribution.contribution_type,
+    })
+    setShowContributionForm(true)
+  }
+
   const handleSubmitContribution = async (e) => {
     e.preventDefault()
     try {
-      await placementsApi.createContribution(formData)
+      if (editingContributionId) {
+        await placementsApi.updateContribution(editingContributionId, formData)
+      } else {
+        await placementsApi.createContribution(formData)
+      }
       setShowContributionForm(false)
+      setEditingContributionId(null)
       setFormData({ company_id: '', title: '', content: '', contribution_type: 'interview_experience' })
       const myContribRes = await placementsApi.getMyContributions()
       setMyContributions(myContribRes.data.contributions || [])
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      await placementsApi.reviewContribution(reviewForm.contributionId, {
+        status: reviewForm.status,
+        rejection_reason: reviewForm.status === 'REJECTED' ? reviewForm.reason : null
+      })
+      setReviewForm({ show: false, contributionId: null, status: 'APPROVED', reason: '' })
+      
+      // Refresh pending list
+      const pendingRes = await placementsApi.getPendingContributions()
+      setPendingContributions(pendingRes.data.contributions || [])
+      
+      // Refresh published list
+      const contribRes = await placementsApi.getContributions()
+      setContributions(contribRes.data.contributions || [])
     } catch (err) {
       setError(err.message)
     }
@@ -166,8 +244,13 @@ export function PlacementsPage() {
   const tabs = [
     { id: 'opportunities', label: 'Opportunities', count: opportunities.length, icon: Briefcase },
     { id: 'contributions', label: 'Contributions', count: contributions.length, icon: Building },
-    { id: 'my-contributions', label: 'My Contributions', count: myContributions.length, icon: Plus },
   ]
+  
+  if (isTeacher) {
+    tabs.push({ id: 'pending-contributions', label: 'Review Pending', count: pendingContributions.length, icon: AlertTriangle })
+  } else {
+    tabs.push({ id: 'my-contributions', label: 'My Contributions', count: myContributions.length, icon: Plus })
+  }
 
   return (
     <div>
@@ -298,7 +381,94 @@ export function PlacementsPage() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {myContributions.map(c => <ContributionCard key={c.id} contribution={c} />)}
+              {myContributions.map(c => <ContributionCard key={c.id} contribution={c} isMine={true} onResubmit={handleResubmit} />)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'pending-contributions' && isTeacher && (
+        <div>
+          {pendingContributions.length === 0 ? (
+            <div className="empty-state">
+              <CheckCircle className="w-12 h-12 text-success" />
+              <h3>All Caught Up!</h3>
+              <p>There are no pending contributions to review.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {pendingContributions.map(c => (
+                <div key={c.id} className="card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--color-warning)' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                    <div>
+                      <h3 style={{ fontWeight: 600, color: 'var(--color-text)' }}>{c.title}</h3>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
+                        {c.contribution_type} • {c.company_name || 'Unknown Company'}
+                      </p>
+                    </div>
+                    <span className="badge badge-warning">Pending Review</span>
+                  </div>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--color-background-soft)', borderRadius: 'var(--radius-sm)' }}>
+                    {c.content}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                      Submitted by Student ID: {c.student_id} • {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                    </p>
+                    <button 
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setReviewForm({ show: true, contributionId: c.id, status: 'APPROVED', reason: '' })}
+                    >
+                      Review
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {reviewForm.show && (
+            <div className="modal-overlay" onClick={() => setReviewForm({ ...reviewForm, show: false })}>
+              <div className="modal" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3 className="modal-title">Review Contribution</h3>
+                  <button className="btn-ghost" onClick={() => setReviewForm({ ...reviewForm, show: false })}><X className="w-5 h-5" /></button>
+                </div>
+                <form onSubmit={handleReviewSubmit} className="modal-content">
+                  <div className="form-group">
+                    <label className="form-label">Action</label>
+                    <select 
+                      className="form-input" 
+                      value={reviewForm.status} 
+                      onChange={e => setReviewForm({...reviewForm, status: e.target.value})}
+                    >
+                      <option value="APPROVED">Approve & Publish</option>
+                      <option value="REJECTED">Reject</option>
+                    </select>
+                  </div>
+                  
+                  {reviewForm.status === 'REJECTED' && (
+                    <div className="form-group">
+                      <label className="form-label">Rejection Reason</label>
+                      <textarea 
+                        className="form-input" 
+                        rows={3} 
+                        value={reviewForm.reason} 
+                        onChange={e => setReviewForm({...reviewForm, reason: e.target.value})} 
+                        placeholder="Explain why this contribution was rejected..." 
+                        required 
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-outline" onClick={() => setReviewForm({ ...reviewForm, show: false })}>Cancel</button>
+                    <button type="submit" className={`btn ${reviewForm.status === 'APPROVED' ? 'btn-primary' : 'btn-danger'}`}>
+                      Confirm {reviewForm.status === 'APPROVED' ? 'Approval' : 'Rejection'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
         </div>

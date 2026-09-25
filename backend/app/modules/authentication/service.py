@@ -105,3 +105,32 @@ class AuthenticationService:
 
         logger.info("demo_user_created", user_id=user.id, email=user.email)
         return user
+
+    async def create_demo_teacher(self) -> User:
+        teacher_email = "teacher@demo.edu"
+        existing = await self.user_repo.get_by_email(teacher_email)
+        if existing:
+            return existing
+
+        hashed_password = self.get_password_hash("demo123")
+        user = User(
+            email=teacher_email,
+            hashed_password=hashed_password,
+            full_name="Demo Teacher",
+            role=UserRole.TEACHER,
+        )
+        user = await self.user_repo.create(user)
+
+        from app.modules.authentication.models import TeacherProfile
+        teacher_profile = TeacherProfile(
+            user_id=user.id,
+            employee_id="EMP2024001",
+            department="Computer Science",
+            designation="Assistant Professor",
+            office_location="Room 304, Block B",
+        )
+        self.user_repo.session.add(teacher_profile)
+        await self.user_repo.session.flush()
+
+        logger.info("demo_teacher_created", user_id=user.id, email=user.email)
+        return user

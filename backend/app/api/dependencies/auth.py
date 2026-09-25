@@ -58,3 +58,25 @@ async def get_current_student_profile(
             detail="Student profile not found",
         )
     return profile
+
+
+async def get_current_teacher(current_user: User = Depends(get_current_user)):
+    from app.modules.authentication.models import UserRole
+    if current_user.role != UserRole.TEACHER and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Requires teacher privileges",
+        )
+    return current_user
+
+
+async def get_current_teacher_profile(
+    current_user: User = Depends(get_current_teacher)
+):
+    profile = current_user.teacher_profile
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Teacher profile not found",
+        )
+    return profile

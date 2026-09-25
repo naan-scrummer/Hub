@@ -16,7 +16,8 @@ class NotificationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    student_id: int
+    student_id: Optional[int] = None
+    teacher_id: Optional[int] = None
     source: NotificationSource
     source_id: Optional[int] = None
     title: str

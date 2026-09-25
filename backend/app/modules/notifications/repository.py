@@ -38,6 +38,29 @@ class NotificationRepository:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_by_teacher(
+        self,
+        teacher_id: int,
+        status: Optional[NotificationStatus] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> List[Notification]:
+        stmt = select(Notification).where(Notification.teacher_id == teacher_id)
+        if status:
+            stmt = stmt.where(Notification.status == status)
+        stmt = stmt.order_by(Notification.created_at.desc()).limit(limit).offset(offset)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_teacher_unread_count(self, teacher_id: int) -> int:
+        result = await self.session.execute(
+            select(func.count(Notification.id)).where(
+                Notification.teacher_id == teacher_id,
+                Notification.status == NotificationStatus.UNREAD,
+            )
+        )
+        return result.scalar_one() or 0
+
     async def get_unread_count(self, student_id: int) -> int:
         result = await self.session.execute(
             select(func.count(Notification.id)).where(
@@ -112,24 +135,27 @@ class NotificationRepository:
             await self.session.refresh(n)
         return notifications
 
-    async def mark_as_read(self, notification_id: int, student_id: int) -> Optional[Notification]:
+    async def mark_as_read(self, notification_id: int, profile_id: int, is_teacher: bool = False) -> Optional[Notification]:
         notification = await self.get_by_id(notification_id)
-        if notification and notification.student_id == student_id:
-            notification.status = NotificationStatus.READ
-            notification.read_at = datetime.now(timezone.utc)
-            notification.updated_at = datetime.now(timezone.utc)
-            await self.session.flush()
-            try:
-                await self.session.commit()
-            except Exception:
-                pass
-            return notification
+        if notification:
+            is_owner = (notification.teacher_id == profile_id) if is_teacher else (notification.student_id == profile_id)
+            if is_owner:
+                notification.status = NotificationStatus.READ
+                notification.read_at = datetime.now(timezone.utc)
+                notification.updated_at = datetime.now(timezone.utc)
+                await self.session.flush()
+                try:
+                    await self.session.commit()
+                except Exception:
+                    pass
+                return notification
         return None
 
-    async def mark_all_as_read(self, student_id: int) -> int:
+    async def mark_all_as_read(self, profile_id: int, is_teacher: bool = False) -> int:
+        cond = Notification.teacher_id == profile_id if is_teacher else Notification.student_id == profile_id
         result = await self.session.execute(
             select(Notification).where(
-                Notification.student_id == student_id,
+                cond,
                 Notification.status == NotificationStatus.UNREAD,
             )
         )
