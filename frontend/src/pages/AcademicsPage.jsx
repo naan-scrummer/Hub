@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { academicsApi } from '../services/api'
 import { format } from 'date-fns'
-import { GraduationCap, RefreshCw, AlertTriangle, Loader2, Award } from 'lucide-react'
+import { GraduationCap, RefreshCw, AlertTriangle, Loader2, Award, Globe } from 'lucide-react'
+import { PortalWebViewer } from '../components/PortalWebViewer'
 
 const gradeColors = {
   'A+': 'var(--color-success)',
@@ -56,6 +57,7 @@ export function AcademicsPage() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState(null)
+  const [showPortalView, setShowPortalView] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,17 +117,28 @@ export function AcademicsPage() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Academics</h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>View your academic records and performance</p>
         </div>
-        <button
-          className="btn btn-secondary"
-          onClick={handleSync}
-          disabled={syncing}
-        >
-          <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
-          <span>Sync from Portal</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button
+            className={`btn ${showPortalView ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setShowPortalView(prev => !prev)}
+          >
+            <Globe className="w-5 h-5" />
+            <span>{showPortalView ? 'Back to Academics' : 'Open Portal Website'}</span>
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleSync}
+            disabled={syncing}
+          >
+            <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
+            <span>Sync from Portal</span>
+          </button>
+        </div>
       </div>
 
-      {records.length === 0 ? (
+      {showPortalView ? (
+        <PortalWebViewer defaultUrl="https://www.auegov.ac.in/" onClose={() => setShowPortalView(false)} />
+      ) : records.length === 0 ? (
         <div className="unavailable-state">
           <GraduationCap className="w-12 h-12" />
           <h3>No Academic Records</h3>

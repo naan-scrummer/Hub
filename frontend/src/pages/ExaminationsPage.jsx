@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { examinationsApi } from '../services/api'
 import { format, formatDistanceToNow } from 'date-fns'
-import { FileText, RefreshCw, AlertTriangle, Calendar, Loader2, Clock, ExternalLink } from 'lucide-react'
+import { FileText, RefreshCw, AlertTriangle, Calendar, Loader2, Clock, ExternalLink, Globe } from 'lucide-react'
+import { PortalWebViewer } from '../components/PortalWebViewer'
 
 function ExamCard({ exam }) {
   const examDate = new Date(exam.exam_date)
@@ -58,6 +59,7 @@ export function ExaminationsPage() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState(null)
+  const [showPortalView, setShowPortalView] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,17 +122,28 @@ export function ExaminationsPage() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Examinations</h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>View your exam schedule and dates</p>
         </div>
-        <button
-          className="btn btn-secondary"
-          onClick={handleSync}
-          disabled={syncing}
-        >
-          <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
-          <span>Sync from Portal</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button
+            className={`btn ${showPortalView ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setShowPortalView(prev => !prev)}
+          >
+            <Globe className="w-5 h-5" />
+            <span>{showPortalView ? 'Back to Examinations' : 'Open Portal Website'}</span>
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleSync}
+            disabled={syncing}
+          >
+            <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
+            <span>Sync from Portal</span>
+          </button>
+        </div>
       </div>
 
-      {exams.length === 0 ? (
+      {showPortalView ? (
+        <PortalWebViewer defaultUrl="https://acoe.annauniv.edu/sems/login/student" onClose={() => setShowPortalView(false)} />
+      ) : exams.length === 0 ? (
         <div className="unavailable-state">
           <FileText className="w-12 h-12" />
           <h3>No Examination Data</h3>
