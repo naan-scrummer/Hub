@@ -1,0 +1,828 @@
+﻿Issue Type,Summary,Description,Epic Link,Labels,Priority
+Epic,[SCRUM03-F001] Authentication,"Feature: Authentication
+
+Description: Secure access to AIO Student's Hub through login, logout, authentication state, protected resources, authorization, and secure credential handling.
+
+Source basis: README Core Features — Authentication.",,scrum-03,Medium
+Epic,[SCRUM03-F002] Dashboard,"Feature: Dashboard
+
+Description: A consolidated student-facing overview of upcoming assignments, examinations, recent announcements, attendance, academic information, pending reminders, notifications, and placement updates. The Dashboard acts as a presentation and aggregation layer rather than owning the business logic of other modules.
+
+Source basis: README — Dashboard.",,scrum-03,Medium
+Epic,[SCRUM03-F003] Attendance,"Feature: Attendance
+
+Description: Student access to attendance information including subject, classes attended, total classes, and attendance percentage. Where applicable, attendance can be synchronized from an existing college portal through the portal integration infrastructure.
+
+Source basis: README — Attendance.",,scrum-03,Medium
+Epic,[SCRUM03-F004] Academics,"Feature: Academics
+
+Description: General academic information including subject information, internal marks, academic performance information, and other academic records. Information may be retrieved from existing college systems through the portal integration layer.
+
+Source basis: README — Academics.",,scrum-03,Medium
+Epic,[SCRUM03-F005] Examinations,"Feature: Examinations
+
+Description: Examination-related information including examination schedules, examination dates, examination-related announcements, and other relevant examination information. Supported college portals may supply synchronized examination information.
+
+Source basis: README — Examinations.",,scrum-03,Medium
+Epic,[SCRUM03-F006] Announcements,"Feature: Announcements
+
+Description: Centralized access to college notices, department announcements, examination notices, academic deadlines, events, and administrative updates, with source and timestamp traceability. Announcements may originate from supported college portals or other configured sources.
+
+Source basis: README — Announcements.",,scrum-03,Medium
+Epic,[SCRUM03-F007] Placements,"Feature: Placements
+
+Description: Centralized placement information including placement opportunities, company information, eligibility requirements, recruitment updates, important dates, preparation resources, and interview experiences. Placement information may come from supported college placement systems, and senior students can contribute experiences and preparation information.
+
+Source basis: README — Placements.",,scrum-03,Medium
+Epic,[SCRUM03-F008] Study Materials,"Feature: Study Materials
+
+Description: Centralized academic-resource access supporting browsing, searching, filtering, subject-related resources, and permitted uploads/contributions. Resources may include notes, PDFs, reference documents, subject materials, and previous academic resources. Materials are connected with Assignments through subject or relevant academic context.
+
+Source basis: README — Materials.",,scrum-03,Medium
+Epic,[SCRUM03-F009] Assignments,"Feature: Assignments
+
+Description: Student task management supporting creation, viewing, editing, deletion, due dates, subject association, descriptions, completion status, upcoming assignments, and overdue identification. Assignments interact with Reminders, Notifications, and Study Materials.
+
+Source basis: README — Assignments.",,scrum-03,Medium
+Epic,[SCRUM03-F010] Reminders,"Feature: Reminders
+
+Description: Time-sensitive student reminders associated with assignments, examinations, important deadlines, and other student-created events. Reminders may be created directly, created by other modules, and processed by background jobs.
+
+Source basis: README — Reminders.",,scrum-03,Medium
+Epic,[SCRUM03-F011] Notifications,"Feature: Notifications
+
+Description: Notifications that inform students about upcoming assignment deadlines, reminder triggers, important announcements, and other relevant academic events. Notification delivery and processing are separated from core domain logic.
+
+Source basis: README — Notifications.",,scrum-03,Medium
+Story,[SCRUM03-F001-UI-001] Login screen,"Story ID: SCRUM03-F001-UI-001
+
+User Story: As a student, I want to log in securely, so that I can access my protected student information.
+
+Description: Provide the student login experience and authenticated entry into the application.
+
+Business Value: Secure access to the student-facing application.
+
+Acceptance Criteria:
+1. Given valid credentials, when the student submits login, then the authenticated application state is established.
+2. Given invalid credentials, when login is attempted, then access is denied and a clear error is shown.
+
+Dependencies: Authentication mechanism implementation.
+Assumptions: The exact authentication technology is determined by the selected stack.
+Technical Notes: Keep credential handling on the appropriate client/server boundary and never expose secrets in client configuration.
+Definition of Done: Login UI implemented and tested with success and failure cases.",[SCRUM03-F001] Authentication,ui scrum-03 dev-slot-1,Medium
+Story,[SCRUM03-F001-FLOW-001] Authentication state and logout,"Story ID: SCRUM03-F001-FLOW-001
+
+User Story: As a student, I want my authentication state to persist appropriately and to log out, so that access to the application is controlled.
+
+Description: Implement authenticated-session state and logout behavior.
+
+Business Value: Consistent authentication state across protected application use.
+
+Acceptance Criteria:
+1. Given an authenticated student, when the application is reopened within the supported session behavior, then authentication state is restored according to the chosen mechanism.
+2. Given an authenticated student, when logout is selected, then the session/authentication state is cleared and protected access is no longer available.
+
+Dependencies: Login authentication flow.
+Assumptions: Session behavior follows the selected authentication mechanism.
+Technical Notes: Authentication state belongs to the client/server authentication boundary, not to domain modules.
+Definition of Done: State transitions and logout are implemented and tested.",[SCRUM03-F001] Authentication,ui backend scrum-03 dev-slot-2,Medium
+Story,[SCRUM03-F001-SEC-001] Protected resources and authorization,"Story ID: SCRUM03-F001-SEC-001
+
+User Story: As a student, I want protected resources to require authentication and authorization, so that restricted information is not exposed.
+
+Description: Enforce authentication for protected APIs/resources and authorization checks for restricted resources.
+
+Business Value: Protects student information and restricted functionality.
+
+Acceptance Criteria:
+1. Given an unauthenticated request to a protected resource, when the request is processed, then access is rejected.
+2. Given an authenticated user without the required authorization, when a restricted resource is requested, then access is rejected.
+3. Given an authenticated and authorized student, when an allowed resource is requested, then access is granted.
+
+Dependencies: Authentication state and protected API endpoints.
+Assumptions: Authorization requirements are based on the resource being accessed.
+Technical Notes: Server-side authorization must not depend only on client-side route hiding.
+Definition of Done: Protected resources and authorization checks are tested.",[SCRUM03-F001] Authentication,backend scrum-03 dev-slot-3,Medium
+Story,[SCRUM03-F001-SEC-002] Secure credential handling,"Story ID: SCRUM03-F001-SEC-002
+
+User Story: As the system, I want credentials handled securely, so that authentication data is not exposed or stored unsafely.
+
+Description: Implement secure handling of credentials and authentication-related secrets.
+
+Business Value: Reduces risk from credential exposure.
+
+Acceptance Criteria:
+1. Given authentication credentials are processed, when they are stored or transmitted within the application, then they follow the selected secure authentication mechanism.
+2. Given authentication configuration contains secrets, when the application is configured, then secrets are supplied through environment/configuration rather than committed source.
+
+Dependencies: Selected authentication mechanism.
+Assumptions: Exact credential mechanism is stack-dependent and not specified in the README.
+Technical Notes: Passwords must never be stored in plain text; external service credentials remain server-side.
+Definition of Done: Security review completed for authentication handling.",[SCRUM03-F001] Authentication,backend scrum-03 dev-slot-4,Medium
+Story,[SCRUM03-F002-UI-001] Student dashboard overview,"Story ID: SCRUM03-F002-UI-001
+
+User Story: As a student, I want a consolidated dashboard, so that I can quickly see information that requires my attention.
+
+Description: Present upcoming assignments, examinations, recent announcements, attendance summary, academic information, pending reminders, notifications, and placement updates in one overview.
+
+Business Value: Reduces the need to navigate multiple systems and highlights attention items.
+
+Acceptance Criteria:
+1. Given a logged-in student opens the dashboard, when required data is available, then the dashboard presents the defined overview sections.
+2. Given one data source is unavailable, when the dashboard loads, then the affected information is represented clearly without breaking unrelated sections.
+
+Dependencies: Feature APIs/data services for the dashboard content.
+Assumptions: The dashboard is a presentation and aggregation layer.
+Technical Notes: Business logic remains in the relevant feature modules.
+Definition of Done: Dashboard implemented and tested with representative feature data.",[SCRUM03-F002] Dashboard,ui scrum-03 dev-slot-5,Medium
+Story,[SCRUM03-F002-BE-001] Dashboard aggregation workflow,"Story ID: SCRUM03-F002-BE-001
+
+User Story: As the dashboard, I want to obtain relevant student information from feature modules, so that one screen can present a consolidated overview.
+
+Description: Coordinate retrieval of dashboard information from assignments, examinations, announcements, attendance, academics, reminders, notifications, and placements.
+
+Business Value: Provides a single aggregation point for the student overview.
+
+Acceptance Criteria:
+1. Given the requested feature information is available, when dashboard data is requested, then the aggregated response contains the relevant sections.
+2. Given one contributing feature fails, when aggregation completes, then the response handles the unavailable section without causing an unhandled application failure.
+
+Dependencies: Availability of feature application services/APIs.
+Assumptions: The dashboard should not own other modules' business rules.
+Technical Notes: Keep aggregation separate from feature-specific domain logic.
+Definition of Done: Aggregation workflow implemented and tested.",[SCRUM03-F002] Dashboard,backend scrum-03 dev-slot-6,Medium
+Story,[SCRUM03-F002-E2E-001] Dashboard end-to-end attention view,"Story ID: SCRUM03-F002-E2E-001
+
+User Story: As a student, I want the dashboard to surface upcoming and recent information, so that I know what needs attention without checking separate modules.
+
+Description: Verify an end-to-end dashboard view spanning assignments, exams, announcements, reminders, notifications, attendance, academics, and placements.
+
+Business Value: Validates the central purpose of the student hub.
+
+Acceptance Criteria:
+1. Given representative data exists across supported modules, when the student opens the dashboard, then the configured overview information is visible in one place.
+2. Given data changes in a contributing module, when the dashboard is refreshed, then the relevant overview reflects the updated information.
+
+Dependencies: Completion of the participating feature workflows.
+Assumptions: Use representative application data for end-to-end validation.
+Technical Notes: Do not duplicate feature business logic in the dashboard test.
+Definition of Done: End-to-end workflow verified.",[SCRUM03-F002] Dashboard,e2e scrum-03 dev-slot-7,Medium
+Story,[SCRUM03-F003-UI-001] Attendance view by subject,"Story ID: SCRUM03-F003-UI-001
+
+User Story: As a student, I want to view my attendance by subject, so that I can monitor my attendance status.
+
+Description: Display subject, classes attended, total classes, and attendance percentage.
+
+Business Value: Improves visibility into academic attendance.
+
+Acceptance Criteria:
+1. Given attendance data is available, when the student opens Attendance, then each supported subject shows attended classes, total classes, and attendance percentage.
+2. Given attendance data is unavailable, when the student opens Attendance, then a clear unavailable state is shown.
+
+Dependencies: Attendance data service.
+Assumptions: Attendance is read from synchronized/source data rather than edited independently by students.
+Technical Notes: Use the latest synchronized values available to the application.
+Definition of Done: Attendance screen implemented and tested.",[SCRUM03-F003] Attendance,ui scrum-03 dev-slot-8,Medium
+Story,[SCRUM03-F003-BE-001] Attendance application processing,"Story ID: SCRUM03-F003-BE-001
+
+User Story: As the Attendance feature, I want synchronized attendance data represented in the application model, so that students can retrieve consistent attendance information.
+
+Description: Process attendance information for student-facing access, including subject, classes attended, total classes, and percentage.
+
+Business Value: Provides a stable application representation of attendance information.
+
+Acceptance Criteria:
+1. Given normalized attendance information is available, when the student attendance data is requested, then the defined attendance fields are returned.
+2. Given attendance input is incomplete or unavailable, when processing occurs, then the application returns a defined unavailable/error state.
+
+Dependencies: Portal integration or source data.
+Assumptions: The external portal remains outside the core domain logic.
+Technical Notes: Attendance business behavior should not depend directly on portal-specific details.
+Definition of Done: Processing implemented and tested with representative data.",[SCRUM03-F003] Attendance,backend scrum-03 trainee-slot-1,Medium
+Story,[SCRUM03-F003-INT-001] College portal attendance synchronization,"Story ID: SCRUM03-F003-INT-001
+
+User Story: As the system, I want to synchronize attendance from supported college portals, so that students can access current attendance in the hub.
+
+Description: Implement the portal integration behavior needed to retrieve attendance information where integration is available.
+
+Business Value: Reduces repeated portal visits and keeps attendance current.
+
+Acceptance Criteria:
+1. Given a supported portal can be accessed, when synchronization runs, then attendance information is retrieved and passed into the application flow.
+2. Given the external portal is unavailable, when synchronization runs, then the failure is handled and does not crash the application.
+
+Dependencies: Supported college portal integration availability.
+Assumptions: Portal-specific communication remains in infrastructure.
+Technical Notes: The README does not specify an exact portal or API contract.
+Definition of Done: Synchronization implemented against the available integration boundary and verified.",[SCRUM03-F003] Attendance,integration scrum-03 trainee-slot-2,Medium
+Story,[SCRUM03-F004-UI-001] Academic information view,"Story ID: SCRUM03-F004-UI-001
+
+User Story: As a student, I want to view my academic information, so that I can understand my academic record in one place.
+
+Description: Present subject information, internal marks, academic performance information, and other available academic records.
+
+Business Value: Centralizes general academic information.
+
+Acceptance Criteria:
+1. Given academic data is available, when the student opens Academics, then the supported academic information is displayed.
+2. Given source data is unavailable, when Academics loads, then a clear unavailable state is shown.
+
+Dependencies: Academic application service/data.
+Assumptions: The exact academic record fields depend on the supported source systems.
+Technical Notes: Do not add student-editing behavior not stated in the README.
+Definition of Done: Academic information view implemented and tested.",[SCRUM03-F004] Academics,ui scrum-03 dev-slot-1,Medium
+Story,[SCRUM03-F004-BE-001] Academic information processing,"Story ID: SCRUM03-F004-BE-001
+
+User Story: As the Academics feature, I want academic records represented consistently, so that the client can consume them.
+
+Description: Process subject information, internal marks, performance information, and other supported academic records.
+
+Business Value: Provides a consistent academic representation to the client.
+
+Acceptance Criteria:
+1. Given source academic data is available, when the academic request is processed, then normalized supported academic information is returned.
+2. Given source data cannot be retrieved, when processing occurs, then a defined unavailable/error response is returned.
+
+Dependencies: College academic source/integration.
+Assumptions: Supported academic fields are limited to information available from configured sources.
+Technical Notes: Keep portal-specific details outside core domain logic.
+Definition of Done: Processing implemented and tested.",[SCRUM03-F004] Academics,backend scrum-03 dev-slot-2,Medium
+Story,[SCRUM03-F004-INT-001] College portal academics synchronization,"Story ID: SCRUM03-F004-INT-001
+
+User Story: As the system, I want to retrieve academic information from supported college systems, so that the Academics module can present current information.
+
+Description: Implement synchronization for academic information from supported college systems through the portal integration boundary.
+
+Business Value: Reduces fragmented access to academic information.
+
+Acceptance Criteria:
+1. Given a supported source is available, when synchronization runs, then academic information is retrieved and mapped for application use.
+2. Given the external source fails, when synchronization runs, then the failure is handled and recorded without breaking core application behavior.
+
+Dependencies: Supported college system integration.
+Assumptions: The README does not specify exact APIs or portals.
+Technical Notes: Portal-specific implementation stays isolated from the academic domain.
+Definition of Done: Integration verified with representative source data.",[SCRUM03-F004] Academics,integration scrum-03 dev-slot-3,Medium
+Story,[SCRUM03-F005-UI-001] Examination schedule view,"Story ID: SCRUM03-F005-UI-001
+
+User Story: As a student, I want to view my examination schedule and dates, so that I can plan my preparation.
+
+Description: Display examination schedules, dates, relevant announcements, and other supported examination information.
+
+Business Value: Makes examination information easier to access.
+
+Acceptance Criteria:
+1. Given examination information is available, when the student opens Examinations, then the relevant schedules and dates are visible.
+2. Given examination information is unavailable, when the page loads, then a clear unavailable state is shown.
+
+Dependencies: Examination application data.
+Assumptions: Exact examination fields depend on available source information.
+Technical Notes: Keep exam-specific business rules separate from portal integration details.
+Definition of Done: Examination view implemented and tested.",[SCRUM03-F005] Examinations,ui scrum-03 dev-slot-4,Medium
+Story,[SCRUM03-F005-BE-001] Examination information processing,"Story ID: SCRUM03-F005-BE-001
+
+User Story: As the Examinations feature, I want examination information normalized for the client, so that students receive consistent schedule data.
+
+Description: Process examination schedules, dates, related announcements, and other supported examination information.
+
+Business Value: Supports a stable examination information service.
+
+Acceptance Criteria:
+1. Given examination source data is available, when processed, then normalized examination information is returned.
+2. Given a source failure occurs, when processing is attempted, then a defined fallback/error response is returned.
+
+Dependencies: Examination source data/integration.
+Assumptions: Exact source schema is not defined by the README.
+Technical Notes: Portal-specific details remain outside the domain layer.
+Definition of Done: Processing implemented and tested.",[SCRUM03-F005] Examinations,backend scrum-03 dev-slot-5,Medium
+Story,[SCRUM03-F005-INT-001] College portal examination synchronization,"Story ID: SCRUM03-F005-INT-001
+
+User Story: As the system, I want to synchronize examination information from supported college portals, so that the hub can show current schedules and dates.
+
+Description: Implement portal synchronization for supported examination information.
+
+Business Value: Keeps students informed without checking separate systems.
+
+Acceptance Criteria:
+1. Given a supported portal is available, when synchronization runs, then examination information is retrieved and mapped into the application.
+2. Given the portal is unavailable, when synchronization runs, then the failure is handled without an unhandled application error.
+
+Dependencies: Supported college portal integration.
+Assumptions: The README does not specify exact portal endpoints.
+Technical Notes: Keep portal-specific communication in the integration boundary.
+Definition of Done: Integration verified with representative data.",[SCRUM03-F005] Examinations,integration scrum-03 dev-slot-6,Medium
+Story,[SCRUM03-F006-UI-001] Announcements feed,"Story ID: SCRUM03-F006-UI-001
+
+User Story: As a student, I want to see centralized announcements, so that I do not have to check multiple communication channels.
+
+Description: Provide a centralized feed for college notices, department announcements, examination notices, academic deadlines, events, and administrative updates.
+
+Business Value: Reduces missed announcements and deadlines.
+
+Acceptance Criteria:
+1. Given announcements are available, when the student opens the Announcements module, then notices are displayed in one place.
+2. Given multiple announcement types are available, when the feed loads, then they can be distinguished by their source/type information.
+
+Dependencies: Announcement aggregation service.
+Assumptions: Sources may include supported college portals or other configured sources.
+Technical Notes: Each announcement should retain source and timestamp information for traceability.
+Definition of Done: Announcements feed implemented and tested.",[SCRUM03-F006] Announcements,ui scrum-03 dev-slot-7,Medium
+Story,[SCRUM03-F006-BE-001] Announcement aggregation and normalization,"Story ID: SCRUM03-F006-BE-001
+
+User Story: As the Announcements module, I want announcements from configured sources normalized into one feed, so that students have a centralized view.
+
+Description: Aggregate configured announcement sources and expose a unified announcement model.
+
+Business Value: Centralizes fragmented notices.
+
+Acceptance Criteria:
+1. Given configured sources provide announcements, when aggregation runs, then announcements are normalized into one collection.
+2. Given duplicate announcements are encountered, when the feed is prepared, then duplicate entries are not needlessly repeated.
+3. Given an announcement is shown, when the student views it, then its source and timestamp are available.
+
+Dependencies: Source integrations/configured sources.
+Assumptions: The README does not specify exact source systems beyond supported college portals/configured sources.
+Technical Notes: Keep source-specific communication outside the announcement domain.
+Definition of Done: Aggregation implemented and tested.",[SCRUM03-F006] Announcements,backend scrum-03 dev-slot-8,Medium
+Story,[SCRUM03-F006-INT-001] College portal announcement synchronization,"Story ID: SCRUM03-F006-INT-001
+
+User Story: As the system, I want to synchronize announcements from supported sources, so that the unified feed stays current.
+
+Description: Implement background synchronization from supported announcement-source portals/configured sources.
+
+Business Value: Keeps notices current without manual student collection.
+
+Acceptance Criteria:
+1. Given a configured source publishes an announcement, when synchronization runs, then the announcement enters the application feed.
+2. Given a source is unavailable, when synchronization runs, then the failure is handled without breaking unrelated announcement processing.
+
+Dependencies: Supported source availability.
+Assumptions: The README leaves exact source/API details unspecified.
+Technical Notes: Portal-specific communication belongs in integration infrastructure.
+Definition of Done: Synchronization verified with representative source data.",[SCRUM03-F006] Announcements,integration scrum-03 trainee-slot-1,Medium
+Story,[SCRUM03-F006-DATA-001] Announcement traceability data,"Story ID: SCRUM03-F006-DATA-001
+
+User Story: As a student, I want announcement source and timestamp information, so that I can understand where an update came from and when it was published.
+
+Description: Ensure centralized announcements retain source and timestamp information.
+
+Business Value: Improves traceability and trust in aggregated notices.
+
+Acceptance Criteria:
+1. Given an announcement enters the system, when it is displayed, then source and timestamp are available.
+2. Given the source metadata is missing, when the announcement is processed, then the system handles the missing information according to a defined data-quality rule rather than silently fabricating it.
+
+Dependencies: Announcement source data.
+Assumptions: Do not invent source metadata when it is unavailable.
+Technical Notes: Metadata should remain tied to the source record.
+Definition of Done: Traceability fields are implemented and tested.",[SCRUM03-F006] Announcements,backend scrum-03 trainee-slot-2,Medium
+Story,[SCRUM03-F007-UI-001] Placement opportunities view,"Story ID: SCRUM03-F007-UI-001
+
+User Story: As a student, I want centralized placement opportunities and company information, so that I can discover relevant opportunities quickly.
+
+Description: Present placement opportunities, company information, eligibility requirements, recruitment updates, and important dates.
+
+Business Value: Centralizes fragmented placement information.
+
+Acceptance Criteria:
+1. Given placement information is available, when the student opens Placements, then supported opportunity details are displayed.
+2. Given eligibility requirements or important dates are present, when the student views an opportunity, then those details are visible.
+
+Dependencies: Placement application data.
+Assumptions: The exact placement-system fields depend on supported source information.
+Technical Notes: Keep source-system details outside the placement domain.
+Definition of Done: Placement view implemented and tested.",[SCRUM03-F007] Placements,ui scrum-03 dev-slot-1,Medium
+Story,[SCRUM03-F007-BE-001] Placement information processing,"Story ID: SCRUM03-F007-BE-001
+
+User Story: As the Placements feature, I want placement information normalized, so that students receive a consistent view of opportunities and recruitment updates.
+
+Description: Process opportunities, company information, eligibility, recruitment updates, important dates, preparation resources, and interview experiences where available.
+
+Business Value: Provides one application representation for placement information.
+
+Acceptance Criteria:
+1. Given placement data is available, when processed, then supported placement information is returned in a consistent form.
+2. Given source information changes, when refreshed, then the application can present the updated values.
+
+Dependencies: Placement source/integration.
+Assumptions: Not every listed information type must come from an external portal; senior contributions can supply preparation-related information.
+Technical Notes: Keep source-specific fields isolated from core placement concepts.
+Definition of Done: Processing implemented and tested.",[SCRUM03-F007] Placements,backend scrum-03 dev-slot-2,Medium
+Story,[SCRUM03-F007-INT-001] College placement-system synchronization,"Story ID: SCRUM03-F007-INT-001
+
+User Story: As the system, I want to retrieve placement information from supported college placement systems, so that students see current opportunities and updates.
+
+Description: Implement synchronization from supported college placement systems.
+
+Business Value: Avoids requiring students to check separate placement systems.
+
+Acceptance Criteria:
+1. Given a supported placement source is available, when synchronization runs, then placement updates are retrieved and mapped.
+2. Given the source is unavailable, when synchronization runs, then the failure is handled without an unhandled application error.
+
+Dependencies: Supported college placement system.
+Assumptions: The README does not mandate a specific API mechanism.
+Technical Notes: Source-specific logic remains in infrastructure.
+Definition of Done: Integration verified with representative data.",[SCRUM03-F007] Placements,integration scrum-03 dev-slot-3,Medium
+Story,[SCRUM03-F007-CON-001] Senior placement contributions,"Story ID: SCRUM03-F007-CON-001
+
+User Story: As a senior student, I want to contribute placement experiences and preparation information, so that other students can benefit from peer knowledge.
+
+Description: Provide a permitted contribution flow for placement-related interview experiences and preparation information.
+
+Business Value: Adds peer knowledge to the centralized placement experience.
+
+Acceptance Criteria:
+1. Given a permitted contributor submits placement-related information, when the contribution is accepted, then it becomes available through the placement feature according to the configured workflow.
+2. Given a contribution is not accepted/available for display, when the student accesses Placements, then it is not presented as published content.
+
+Dependencies: Placement contribution capability.
+Assumptions: The README states seniors can contribute but does not define moderation rules.
+Technical Notes: Do not invent a moderation model; use the product workflow chosen by the team.
+Definition of Done: Contribution workflow implemented and tested.",[SCRUM03-F007] Placements,ui backend scrum-03 dev-slot-4,Medium
+Story,[SCRUM03-F008-UI-001] Study materials browse and access,"Story ID: SCRUM03-F008-UI-001
+
+User Story: As a student, I want to browse and access study materials, so that I can find academic resources in one place.
+
+Description: Provide access to notes, PDFs, reference documents, subject materials, and previous academic resources.
+
+Business Value: Centralizes academic resources.
+
+Acceptance Criteria:
+1. Given materials are available, when the student opens Materials, then available resources are listed and can be opened or accessed.
+2. Given a resource cannot be accessed, when the student selects it, then a clear error/unavailable state is shown.
+
+Dependencies: Materials data/storage service.
+Assumptions: The exact access mechanism depends on the selected storage implementation.
+Technical Notes: Uploaded files must be validated.
+Definition of Done: Browse/access UI implemented and tested.",[SCRUM03-F008] Study Materials,ui scrum-03 dev-slot-5,Medium
+Story,[SCRUM03-F008-UI-002] Study materials search and filtering,"Story ID: SCRUM03-F008-UI-002
+
+User Story: As a student, I want to search and filter study materials, so that I can quickly find relevant resources.
+
+Description: Support search and filtering of materials, including subject-related context.
+
+Business Value: Reduces time spent locating study resources.
+
+Acceptance Criteria:
+1. Given materials exist, when the student searches or filters, then matching materials are presented.
+2. Given no material matches the selected search/filter, when results are displayed, then a clear empty state is shown.
+
+Dependencies: Materials listing.
+Assumptions: Filter dimensions are limited to what the available material metadata supports.
+Technical Notes: Feature-specific logic should remain within the Materials module.
+Definition of Done: Search/filter behavior implemented and tested.",[SCRUM03-F008] Study Materials,ui scrum-03 dev-slot-6,Medium
+Story,[SCRUM03-F008-BE-001] Study materials catalog service,"Story ID: SCRUM03-F008-BE-001
+
+User Story: As the Materials feature, I want a consistent catalog of academic resources, so that clients can browse and search materials.
+
+Description: Provide the application-side handling of material metadata and access information.
+
+Business Value: Supports centralized material discovery.
+
+Acceptance Criteria:
+1. Given material records exist, when the catalog is requested, then supported materials and relevant metadata are returned.
+2. Given a material is unavailable, when it is requested, then the service returns a defined unavailable response.
+
+Dependencies: Material storage/data.
+Assumptions: The README does not specify a file-storage technology.
+Technical Notes: Keep storage-specific implementation outside core material concepts.
+Definition of Done: Catalog service implemented and tested.",[SCRUM03-F008] Study Materials,backend scrum-03 dev-slot-7,Medium
+Story,[SCRUM03-F008-CON-001] Permitted material contributions,"Story ID: SCRUM03-F008-CON-001
+
+User Story: As a student, I want to upload or contribute academic resources where permitted, so that useful materials can be shared.
+
+Description: Support permitted uploads or contributions of academic resources such as notes, PDFs, reference documents, and subject materials.
+
+Business Value: Expands the shared resource base.
+
+Acceptance Criteria:
+1. Given a permitted user selects a valid academic resource, when the contribution is submitted, then the resource is stored and associated with the relevant academic context.
+2. Given an uploaded file is invalid or unsupported, when submission is attempted, then it is rejected with a clear validation result.
+
+Dependencies: File storage and material catalog.
+Assumptions: Permissions and exact validation rules are determined by the application configuration.
+Technical Notes: Uploaded files must be validated; secrets and credentials are not stored in client configuration.
+Definition of Done: Contribution flow implemented and tested.",[SCRUM03-F008] Study Materials,backend ui scrum-03 dev-slot-8,Medium
+Story,[SCRUM03-F008-REL-001] Assignment-related material context,"Story ID: SCRUM03-F008-REL-001
+
+User Story: As a student, I want assignment-related materials connected to their subject or academic context, so that I can move from a task to relevant resources.
+
+Description: Connect study materials with Assignments through subject or relevant academic context.
+
+Business Value: Makes the Materials and Assignments modules useful together.
+
+Acceptance Criteria:
+1. Given an assignment has a subject or relevant academic context, when related materials are requested, then relevant materials can be identified.
+2. Given no related materials exist, when the student requests them, then a clear empty state is shown.
+
+Dependencies: Assignments module and material metadata.
+Assumptions: The README specifies relationship through subject or relevant academic context.
+Technical Notes: Do not create unrelated cross-module coupling.
+Definition of Done: Relationship is implemented and tested.",[SCRUM03-F008] Study Materials,backend e2e scrum-03 trainee-slot-1,Medium
+Story,[SCRUM03-F009-UI-001] Assignment CRUD screen,"Story ID: SCRUM03-F009-UI-001
+
+User Story: As a student, I want to create, view, edit, and delete assignments, so that I can manage my academic tasks.
+
+Description: Provide the core assignment management experience.
+
+Business Value: Gives students direct control over their task list.
+
+Acceptance Criteria:
+1. Given a student creates an assignment, when valid information is submitted, then the assignment is stored.
+2. Given an existing assignment is selected, when the student edits it, then the updated information is saved.
+3. Given an existing assignment is selected, when the student deletes it, then it is removed from the active assignment list.
+
+Dependencies: Assignment application service and persistence.
+Assumptions: Only student-created assignment management is required by the README.
+Technical Notes: Use protected resources so students can access only authorized assignment data.
+Definition of Done: CRUD flow implemented and tested.",[SCRUM03-F009] Assignments,ui scrum-03 trainee-slot-2,Medium
+Story,[SCRUM03-F009-DATA-001] Assignment details and status,"Story ID: SCRUM03-F009-DATA-001
+
+User Story: As a student, I want assignments to store due date, subject, description, and completion status, so that I can organize my academic work.
+
+Description: Maintain assignment details required by the README and expose upcoming/overdue/completed state.
+
+Business Value: Supports practical task organization.
+
+Acceptance Criteria:
+1. Given an assignment is created, when valid details are submitted, then due date, subject, description, and completion state are stored.
+2. Given an assignment due date has passed and it is not completed, when assignments are viewed, then it can be identified as overdue.
+3. Given an assignment is marked completed, when assignments are viewed, then its completion status is reflected.
+
+Dependencies: Assignment persistence.
+Assumptions: Due-date comparison uses the application's configured date/time behavior.
+Technical Notes: Do not infer additional task fields beyond the README unless needed by the implementation.
+Definition of Done: Assignment data model and status behavior implemented and tested.",[SCRUM03-F009] Assignments,backend scrum-03 dev-slot-1,Medium
+Story,[SCRUM03-F009-UI-002] Upcoming and overdue assignment views,"Story ID: SCRUM03-F009-UI-002
+
+User Story: As a student, I want to see upcoming and overdue assignments, so that I can prioritize my work.
+
+Description: Provide views or filters that make upcoming and overdue assignments easy to identify.
+
+Business Value: Helps students manage deadlines.
+
+Acceptance Criteria:
+1. Given assignments have future due dates, when the student requests upcoming assignments, then the relevant tasks are shown.
+2. Given incomplete assignments have passed due dates, when the student views overdue work, then those assignments are identified clearly.
+
+Dependencies: Assignment due dates and completion state.
+Assumptions: Classification follows the stored due date and completion state.
+Technical Notes: Do not duplicate reminder logic in the Assignment UI.
+Definition of Done: Upcoming/overdue behavior implemented and tested.",[SCRUM03-F009] Assignments,ui scrum-03 dev-slot-2,Medium
+Story,[SCRUM03-F009-REL-001] Assignment to reminder integration,"Story ID: SCRUM03-F009-REL-001
+
+User Story: As the system, I want an assignment due date to create or update its reminder relationship, so that students can receive timely notifications.
+
+Description: Use assignment due dates as inputs to the Reminder module.
+
+Business Value: Connects core assignment management to time-sensitive reminders.
+
+Acceptance Criteria:
+1. Given a student creates an assignment with a due date, when the assignment is saved, then the corresponding reminder workflow can be scheduled.
+2. Given an assignment due date is changed, when the assignment is updated, then the related reminder is updated as required by the reminder workflow.
+
+Dependencies: Reminder module and scheduled processing.
+Assumptions: The README shows due date → reminder scheduling; exact scheduler mechanism is implementation-specific.
+Technical Notes: Keep reminder processing in the Reminders/Jobs responsibilities.
+Definition of Done: Integration behavior implemented and tested.",[SCRUM03-F009] Assignments,backend integration scrum-03 dev-slot-3,Medium
+Story,[SCRUM03-F009-REL-002] Assignment completion and reminder behavior,"Story ID: SCRUM03-F009-REL-002
+
+User Story: As the system, I want assignment completion state to interact correctly with its reminder workflow, so that completed work does not generate unnecessary attention.
+
+Description: Connect assignment completion information with the reminder/notification workflow.
+
+Business Value: Prevents stale task reminders from remaining relevant after completion.
+
+Acceptance Criteria:
+1. Given an assignment is marked completed before its reminder trigger, when reminder processing occurs, then the workflow respects the completion state.
+2. Given an assignment remains incomplete, when its reminder trigger is reached, then the reminder can proceed to notification generation.
+
+Dependencies: Assignment state and Reminder processing.
+Assumptions: Exact cancellation/rescheduling mechanism is not specified in the README.
+Technical Notes: Keep business state in Assignments and time-based processing in Reminders/Jobs.
+Definition of Done: Behavior verified with representative workflow tests.",[SCRUM03-F009] Assignments,integration e2e scrum-03 dev-slot-4,Medium
+Story,[SCRUM03-F010-UI-001] Reminder management,"Story ID: SCRUM03-F010-UI-001
+
+User Story: As a student, I want to create and view reminders, so that I can keep track of time-sensitive events.
+
+Description: Support reminders created directly by students and reminders associated with assignments, examinations, important deadlines, and other student-created events.
+
+Business Value: Helps students remember time-sensitive work.
+
+Acceptance Criteria:
+1. Given valid reminder information is entered, when it is saved, then the reminder is available for processing.
+2. Given a reminder is associated with another module entity, when that reminder is viewed, then the relationship is visible.
+
+Dependencies: Reminder application service.
+Assumptions: Exact reminder fields beyond trigger time/relationship are implementation-specific.
+Technical Notes: Avoid duplicating notification delivery logic in the reminder UI.
+Definition of Done: Reminder management implemented and tested.",[SCRUM03-F010] Reminders,ui scrum-03 dev-slot-5,Medium
+Story,[SCRUM03-F010-BE-001] Reminder scheduling workflow,"Story ID: SCRUM03-F010-BE-001
+
+User Story: As the system, I want reminders processed at their trigger time, so that relevant notifications can be generated.
+
+Description: Implement the reminder application workflow and its handoff to background processing.
+
+Business Value: Makes time-sensitive reminders actionable without relying on an active UI request.
+
+Acceptance Criteria:
+1. Given a reminder has a trigger time, when that time is reached and processing runs, then the reminder is recognized as ready for processing.
+2. Given the reminder is linked to an assignment or other supported event, when processing runs, then the associated event context is available to downstream notification handling.
+
+Dependencies: Background job processing.
+Assumptions: The README specifies background jobs but not a specific queue/scheduler technology.
+Technical Notes: Time-based work belongs in Jobs rather than API request handling.
+Definition of Done: Reminder scheduling workflow implemented and tested.",[SCRUM03-F010] Reminders,backend scrum-03 dev-slot-6,Medium
+Story,[SCRUM03-F010-JOB-001] Reminder background processing,"Story ID: SCRUM03-F010-JOB-001
+
+User Story: As the system, I want background processing to handle reminders independently of API requests, so that time-based work can occur reliably.
+
+Description: Process reminders that have reached their trigger time through background work.
+
+Business Value: Separates scheduled processing from individual client requests.
+
+Acceptance Criteria:
+1. Given a reminder is ready, when background processing runs, then the reminder is processed.
+2. Given a reminder processing attempt fails, when the job handles the failure, then it does not cause the entire application process to crash.
+
+Dependencies: Reminder persistence and notification workflow.
+Assumptions: The README specifies background processing but leaves scheduler implementation open.
+Technical Notes: Keep background job responsibilities separate from API request handling.
+Definition of Done: Reminder job behavior implemented and tested.",[SCRUM03-F010] Reminders,backend integration scrum-03 dev-slot-7,Medium
+Story,[SCRUM03-F011-UI-001] Notifications center,"Story ID: SCRUM03-F011-UI-001
+
+User Story: As a student, I want to view notifications, so that I can see events requiring my attention.
+
+Description: Provide a student-facing notification area for upcoming assignment deadlines, reminder triggers, important announcements, and other relevant academic events.
+
+Business Value: Centralizes attention-worthy events.
+
+Acceptance Criteria:
+1. Given notifications exist, when the student opens Notifications, then relevant notifications are displayed.
+2. Given there are no notifications, when the notification area is opened, then a clear empty state is shown.
+
+Dependencies: Notification application/data service.
+Assumptions: The README does not specify advanced notification preferences.
+Technical Notes: Keep delivery infrastructure separate from notification domain behavior.
+Definition of Done: Notification center implemented and tested.",[SCRUM03-F011] Notifications,ui scrum-03 dev-slot-8,Medium
+Story,[SCRUM03-F011-BE-001] Notification generation workflow,"Story ID: SCRUM03-F011-BE-001
+
+User Story: As the system, I want to generate notifications from relevant academic events, so that students are informed when attention is needed.
+
+Description: Generate notifications for assignment deadlines, reminder triggers, important announcements, and other relevant academic events.
+
+Business Value: Turns important application events into actionable student information.
+
+Acceptance Criteria:
+1. Given an event qualifies for notification, when the notification workflow processes it, then a notification record is generated with the relevant event context.
+2. Given an event does not qualify, when processed, then no irrelevant notification is generated.
+
+Dependencies: Assignments, Reminders, Announcements, and other supported event sources.
+Assumptions: The README does not define a detailed notification rules engine; implement only documented triggers.
+Technical Notes: Keep event-specific source logic outside notification delivery infrastructure.
+Definition of Done: Generation workflow implemented and tested.",[SCRUM03-F011] Notifications,backend scrum-03 trainee-slot-1,Medium
+Story,[SCRUM03-F011-JOB-001] Notification background processing,"Story ID: SCRUM03-F011-JOB-001
+
+User Story: As the system, I want notification-related background work handled separately from API requests, so that notification processing is decoupled from interactive requests.
+
+Description: Handle notification-related background processing through the Jobs responsibility described in the README.
+
+Business Value: Improves separation between interactive operations and background processing.
+
+Acceptance Criteria:
+1. Given a notification job is ready, when background processing runs, then notification work is processed independently of a user request.
+2. Given background notification processing encounters a failure, when handled, then the application remains stable and the failure can be addressed through the job workflow.
+
+Dependencies: Notification generation workflow.
+Assumptions: The README leaves the specific job mechanism unspecified.
+Technical Notes: Notification delivery infrastructure and job processing should remain outside domain rules.
+Definition of Done: Notification job implemented and tested.",[SCRUM03-F011] Notifications,backend scrum-03 trainee-slot-2,Medium
+Story,[SCRUM03-F011-REL-001] Reminder-to-notification workflow,"Story ID: SCRUM03-F011-REL-001
+
+User Story: As the system, I want ready reminders to produce notifications, so that students are alerted at the appropriate time.
+
+Description: Implement the documented flow from Reminder processing to Notification generation.
+
+Business Value: Connects the time-sensitive reminder feature to student attention.
+
+Acceptance Criteria:
+1. Given a reminder reaches its trigger time, when reminder processing runs, then notification generation is invoked.
+2. Given notification generation succeeds, when the notification workflow completes, then the student can retrieve the resulting notification.
+
+Dependencies: Reminder processing and notification generation.
+Assumptions: Delivery channel details beyond in-app notification handling are future/implementation dependent.
+Technical Notes: Follow the README workflow: Reminder Job → Notification → Notification Job → Student.
+Definition of Done: End-to-end reminder-to-notification workflow verified.",[SCRUM03-F011] Notifications,e2e scrum-03 dev-slot-1,Medium
+Story,[SCRUM03-E2E-001] Assignment → Reminder → Notification end-to-end workflow,"Story ID: SCRUM03-E2E-001
+
+User Story: As a student, I want creating an assignment to lead to the appropriate reminder and notification flow, so that upcoming deadlines receive attention automatically.
+
+Description: Validate the documented workflow: Student creates assignment → due date stored → reminder scheduled → reminder job detects trigger → notification generated → student receives notification.
+
+Business Value: Demonstrates one of the key integrated workflows in the README.
+
+Acceptance Criteria:
+1. Given a student creates an assignment with a due date, when the workflow progresses to the configured trigger time, then a reminder is processed and a notification becomes available to the student.
+2. Given the assignment is completed before the trigger, when reminder processing runs, then the workflow respects completion state.
+
+Dependencies: Assignments, Reminders, Notifications.
+Assumptions: Use a controlled test time/data setup.
+Technical Notes: Follow the module boundaries stated in the README rather than moving job logic into the API.
+Definition of Done: End-to-end workflow tested.",[SCRUM03-F009] Assignments,e2e scrum-03 dev-slot-2,Medium
+Story,[SCRUM03-E2E-002] Assignment → Materials context workflow,"Story ID: SCRUM03-E2E-002
+
+User Story: As a student, I want to find relevant study materials from an assignment context, so that I can move from a task to useful academic resources.
+
+Description: Validate the documented relationship between Assignments and Materials through subject or relevant academic context.
+
+Business Value: Supports the integration between task management and study resources.
+
+Acceptance Criteria:
+1. Given an assignment is associated with a subject or academic context, when related materials are requested, then relevant materials are discoverable.
+2. Given no related material exists, when the relationship is requested, then a clear empty result is returned.
+
+Dependencies: Assignments and Materials.
+Assumptions: Relationship uses subject or relevant academic context as described in the README.
+Technical Notes: Do not introduce unrelated cross-module dependencies.
+Definition of Done: End-to-end workflow verified.",[SCRUM03-F008] Study Materials,e2e scrum-03 dev-slot-3,Medium
+Story,[SCRUM03-E2E-003] Portal → Attendance → Student workflow,"Story ID: SCRUM03-E2E-003
+
+User Story: As a student, I want supported college attendance data synchronized into the hub and shown to me, so that I can access current attendance without switching systems.
+
+Description: Validate the documented flow from a supported college portal through portal integration, attendance application logic/domain, persistence, API, and client presentation.
+
+Business Value: Demonstrates the core portal synchronization pattern for Attendance.
+
+Acceptance Criteria:
+1. Given a supported portal returns attendance data, when synchronization completes, then the student can retrieve the resulting attendance information in the hub.
+2. Given portal retrieval fails, when the student opens Attendance, then a clear unavailable state is shown.
+
+Dependencies: Attendance portal integration.
+Assumptions: Use representative/mock external source data for testing.
+Technical Notes: Portal-specific details remain in infrastructure.
+Definition of Done: End-to-end synchronization workflow verified.",[SCRUM03-F003] Attendance,e2e scrum-03 dev-slot-4,Medium
+Story,[SCRUM03-E2E-004] Portal synchronization to examination view,"Story ID: SCRUM03-E2E-004
+
+User Story: As a student, I want examination information synchronized from supported college systems and shown in the hub, so that I can view schedules and dates in one place.
+
+Description: Validate portal integration → application/domain processing → database → API → client flow for examinations.
+
+Business Value: Demonstrates current examination information reaching the student-facing module.
+
+Acceptance Criteria:
+1. Given a supported source returns examination information, when synchronization completes, then the student can view the synchronized schedule/date information.
+2. Given synchronization fails, when the student opens Examinations, then a clear unavailable state is shown.
+
+Dependencies: Examination portal integration.
+Assumptions: Use representative/mock source data for testing.
+Technical Notes: Do not couple the UI directly to portal-specific implementations.
+Definition of Done: End-to-end examination synchronization verified.",[SCRUM03-F005] Examinations,e2e scrum-03 dev-slot-5,Medium
+Story,[SCRUM03-T-001] Authentication unit and integration test coverage,"Story ID: SCRUM03-T-001
+
+User Story: As the development team, I want authentication unit/integration coverage, so that protected access behavior is verified.
+
+Description: Test authentication state, protected resources, authorization, and secure failure handling using the project testing strategy.
+
+Business Value: Reduces regressions in a foundational feature.
+
+Acceptance Criteria:
+1. Given valid and invalid authentication scenarios, when tests run, then expected access decisions and state transitions are verified.
+2. Given protected-resource requests, when tests run, then authentication and authorization behavior is verified.
+
+Dependencies: Authentication implementation.
+Assumptions: Use test data and mocks appropriate to the selected stack.
+Technical Notes: The README defines unit and integration testing; exact framework is not specified.
+Definition of Done: Relevant unit/integration tests implemented and passing.",[SCRUM03-F001] Authentication,test scrum-03 trainee-slot-1,Medium
+Story,[SCRUM03-T-002] Assignments/reminders/notifications system test coverage,"Story ID: SCRUM03-T-002
+
+User Story: As the development team, I want system tests for the assignment-reminder-notification workflow, so that the documented end-to-end behavior remains reliable.
+
+Description: Test the complete user-facing workflow from login/dashboard use through assignment creation, reminder creation, reminder trigger, and notification availability.
+
+Business Value: Validates one of the key system workflows described in the README.
+
+Acceptance Criteria:
+1. Given a test student creates an assignment, when the reminder trigger is reached, then a notification is generated and observable by the student-facing workflow.
+2. Given the assignment is completed before the trigger, when the workflow is exercised, then reminder/notification handling respects the completion state.
+
+Dependencies: Implemented Assignment, Reminder, and Notification modules.
+Assumptions: Use controlled system-test data and time behavior.
+Technical Notes: System tests should exercise the public feature workflow rather than internal implementation details.
+Definition of Done: System test scenarios implemented and passing.",[SCRUM03-F009] Assignments,test scrum-03 trainee-slot-2,Medium
+Story,[SCRUM03-T-003] Announcement feed integration test coverage,"Story ID: SCRUM03-T-003
+
+User Story: As the development team, I want announcement integration tests, so that synchronized notices retain source and timestamp information.
+
+Description: Test announcement aggregation and portal/source synchronization behavior against representative data.
+
+Business Value: Protects the centralized announcement experience and traceability rule.
+
+Acceptance Criteria:
+1. Given representative source announcements are available, when aggregation runs, then they appear in the unified feed.
+2. Given source and timestamp metadata are present, when the feed is built, then the metadata remains available.
+
+Dependencies: Announcement aggregation and integration implementation.
+Assumptions: Use mock/configured source data.
+Technical Notes: No live external portal dependency is required for the test itself.
+Definition of Done: Relevant integration tests implemented and passing.",[SCRUM03-F006] Announcements,test integration scrum-03 trainee-slot-1,Medium

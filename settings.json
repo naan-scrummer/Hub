@@ -1,0 +1,13 @@
+{
+"antigravity.fileAccessPolicy": {
+"deny": [
+"**/.env",
+"**/secrets/**",
+"**/dist/**",
+"**/coverage/**",
+"**/prompts-localonly/**",
+"**/archive/**"
+]
+},
+"antigravity.respectGitIgnore": true
+}

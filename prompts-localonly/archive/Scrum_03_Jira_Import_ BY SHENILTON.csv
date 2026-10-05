@@ -1,0 +1,264 @@
+Issue Type,Summary,Description,Epic Link,Labels,Priority
+Epic,"[SCRUM03-F001] Academic Dashboard (Attendance, Marks, Exam Info)","Feature ID: SCRUM03-F001
+Classification: Explicit Requirement
+Source Document: Scrum Team 3_IT_batchA_MITAU_20260807.docx
+
+Description: Consolidated view of a student's attendance, internal marks, and exam information sourced from existing college portals.
+
+Business Objective: Let students monitor academic performance in one place instead of visiting multiple portals.
+
+Actors/Roles: Student, External Academic Portal(s)
+
+Functional Requirements:
+- Display current attendance percentage.
+- Display internal marks by subject.
+- Display exam schedule/information.
+
+Business Rules:
+- Data displayed must reflect the source portal's latest values (no independent editing by students).
+
+Dependencies:
+- Integration with existing college academic portal(s) — external system, not owned by this Scrum.
+
+Assumptions:
+- Assumption: the college's existing academic systems expose data via an API or extractable feed; not confirmed in source document.
+
+Open Questions:
+- Open Question: which specific academic portals/systems must be integrated, and do they provide APIs? Needs Clarification.",,scrum-03,Medium
+Epic,"[SCRUM03-F002] Announcements, Placement Updates & Study Materials Aggregator","Feature ID: SCRUM03-F002
+Classification: Explicit Requirement
+Source Document: Scrum Team 3_IT_batchA_MITAU_20260807.docx
+
+Description: Aggregates announcements from various portals, placement updates from CUIC, and access to study materials in one feed.
+
+Business Objective: Prevent missed announcements/deadlines and centralize access to placement and study content.
+
+Actors/Roles: Student, CUIC (Placement Cell), External Portals
+
+Functional Requirements:
+- Aggregate announcements from multiple source portals into one feed.
+- Display placement updates sourced from CUIC.
+- Provide access to study materials.
+
+Business Rules:
+- Announcements must display source and timestamp for traceability.
+
+Dependencies:
+- Integration with CUIC placement system and other announcement-source portals.
+
+Assumptions:
+- Assumption: CUIC exposes updates via an accessible feed/API.
+
+Open Questions:
+- Open Question: is CUIC integration a live API or a manually curated feed? Not specified.",,scrum-03,Medium
+Epic,[SCRUM03-F003] AI Study Assistant (Question Paper Analysis & Recommendations),"Feature ID: SCRUM03-F003
+Classification: Explicit Requirement
+Source Document: Scrum Team 3_IT_batchA_MITAU_20260807.docx
+
+Description: AI-powered features that analyze previous question papers, provide syllabus insights, and generate study recommendations, including an AI Smart Question Paper Predictor.
+
+Business Objective: Help students prepare smarter by surfacing high-priority exam topics.
+
+Actors/Roles: Student
+
+Functional Requirements:
+- Analyze previous question papers to identify recurring patterns/topics.
+- Provide syllabus insights and study recommendations.
+- Highlight frequently-asked topics to prioritize.
+
+Business Rules:
+- Predictions must be presented as guidance, not guaranteed exam content.
+
+Dependencies:
+- Feature SCRUM03-F002 for sourcing study materials/question papers.
+
+Assumptions:
+- Assumption: historical question papers are available in digital form for analysis; not confirmed.
+
+Open Questions:
+- Open Question: source and volume of historical question papers required to train/support the predictor is unspecified.",,scrum-03,Medium
+Story,[SCRUM03-F001-UI-001] Academic dashboard screen,"Story ID: SCRUM03-F001-UI-001
+
+User Story: As a student, I want to see my attendance, marks, and exam info on one dashboard, so that I don't need to check multiple portals.
+
+Description: Dashboard screen with attendance %, marks summary, and upcoming exam list.
+
+Business Value: Saves time and improves visibility into academic standing.
+
+Acceptance Criteria:
+AC1. Given a logged-in student opens the dashboard, when data loads successfully, then attendance, marks, and exam info are displayed.
+AC2. Given the source portal data cannot be fetched, when the dashboard loads, then a clear 'data unavailable' message is shown instead of blank/broken UI.
+
+Dependencies: Depends on Backend aggregation API.
+Assumptions: N/A
+Technical Notes: N/A
+Definition of Done: Dashboard implemented and tested against sample/mock data.","[SCRUM03-F001] Academic Dashboard (Attendance, Marks, Exam Info)",ui scrum-03,Medium
+Story,[SCRUM03-F001-BE-001] Academic data aggregation service,"Story ID: SCRUM03-F001-BE-001
+
+User Story: As the dashboard UI, I want to fetch a student's academic data from the source portals, so that I can display it in one place.
+
+Description: Backend service that pulls/aggregates attendance, marks, and exam data per student.
+
+Business Value: Core aggregation capability underpinning the hub concept.
+
+Acceptance Criteria:
+AC1. Given a student ID is provided, when the source system responds successfully, then normalized academic data is returned.
+AC2. Given a source portal integration fails, when the request is processed, then a defined error/fallback response is returned instead of an unhandled failure.
+
+Dependencies: Depends on Integration story SCRUM03-F001-INT-001.
+Assumptions: N/A
+Technical Notes: TBD — requires technical confirmation of source system APIs.
+Definition of Done: Service implemented and tested.","[SCRUM03-F001] Academic Dashboard (Attendance, Marks, Exam Info)",backend scrum-03,Medium
+Story,[SCRUM03-F001-DB-001] Cached academic data store,"Story ID: SCRUM03-F001-DB-001
+
+User Story: As the system, I want to cache fetched academic data locally, so that the dashboard loads quickly and remains available if the source portal is briefly unreachable.
+
+Description: Local cache table storing last-synced attendance/marks/exam data per student with a sync timestamp.
+
+Business Value: Improves performance and resilience.
+
+Acceptance Criteria:
+AC1. Given data is successfully fetched from a source portal, when processed, then it is cached with an updated sync timestamp.
+
+Dependencies: Depends on aggregation service.
+Assumptions: Assumption: caching is acceptable given data is read-mostly; refresh frequency TBD.
+Technical Notes: TBD — requires technical confirmation of refresh/cache-invalidation strategy.
+Definition of Done: Cache schema implemented.","[SCRUM03-F001] Academic Dashboard (Attendance, Marks, Exam Info)",database scrum-03,Medium
+Story,[SCRUM03-F001-INT-001] Integration with college academic portal(s),"Story ID: SCRUM03-F001-INT-001
+
+User Story: As the system, I want to connect to the existing academic portal(s), so that attendance, marks, and exam data can be retrieved automatically.
+
+Description: API/data integration with external academic systems (producer: college portal, consumer: AIO Hub backend).
+
+Business Value: Eliminates duplicate manual data entry and keeps data current.
+
+Acceptance Criteria:
+AC1. Given valid student credentials/authorization are available, when a data pull is triggered, then attendance, marks, and exam data are retrieved and mapped to the hub's data model.
+AC2. Given the external portal times out, when a pull is attempted, then the integration retries per a defined policy and logs the failure if retries are exhausted.
+
+Dependencies: Cross-Scrum/External dependency — portal ownership and API availability unconfirmed.
+Assumptions: Assumption: portals are external/legacy systems outside the 7 Scrums.
+Technical Notes: TBD — requires technical confirmation of endpoint, auth method, retry, and timeout behavior.
+Definition of Done: Integration built against a mock/test endpoint and verified.","[SCRUM03-F001] Academic Dashboard (Attendance, Marks, Exam Info)",integration scrum-03,Medium
+Story,[SCRUM03-F002-UI-001] Unified announcements & placements feed,"Story ID: SCRUM03-F002-UI-001
+
+User Story: As a student, I want to see all announcements and placement updates in one feed, so that I don't miss important information.
+
+Description: Chronological feed UI showing aggregated announcements and placement posts, with source tags.
+
+Business Value: Reduces missed deadlines/announcements.
+
+Acceptance Criteria:
+AC1. Given a student opens the feed, when data loads, then announcements and placement updates are shown in reverse-chronological order with source labels.
+
+Dependencies: Depends on Backend feed aggregation API.
+Assumptions: N/A
+Technical Notes: N/A
+Definition of Done: Feed UI implemented and tested.","[SCRUM03-F002] Announcements, Placement Updates & Study Materials Aggregator",ui scrum-03,Medium
+Story,[SCRUM03-F002-UI-002] Study materials access screen,"Story ID: SCRUM03-F002-UI-002
+
+User Story: As a student, I want to browse and download study materials, so that I can access resources without visiting a separate portal.
+
+Description: List/grid of available study materials with download/view action.
+
+Business Value: Centralizes access to learning resources.
+
+Acceptance Criteria:
+AC1. Given a student opens study materials, when the list loads, then available materials are shown and can be opened/downloaded.
+
+Dependencies: Depends on Backend study-materials API.
+Assumptions: N/A
+Technical Notes: N/A
+Definition of Done: Screen implemented and tested.","[SCRUM03-F002] Announcements, Placement Updates & Study Materials Aggregator",ui scrum-03,Medium
+Story,[SCRUM03-F002-BE-001] Announcement/placement aggregation service,"Story ID: SCRUM03-F002-BE-001
+
+User Story: As the feed UI, I want to fetch aggregated announcements and placement updates, so that I can present a unified feed.
+
+Description: Backend service pulling and merging data from multiple source systems.
+
+Business Value: Core aggregation capability.
+
+Acceptance Criteria:
+AC1. Given source systems respond, when aggregation runs, then a merged, de-duplicated, timestamp-sorted list is returned.
+
+Dependencies: Depends on Integration stories.
+Assumptions: N/A
+Technical Notes: TBD — requires technical confirmation.
+Definition of Done: Service implemented and tested.","[SCRUM03-F002] Announcements, Placement Updates & Study Materials Aggregator",backend scrum-03,Medium
+Story,[SCRUM03-F002-INT-001] CUIC placement-update integration,"Story ID: SCRUM03-F002-INT-001
+
+User Story: As the system, I want to receive placement updates from CUIC, so that students see current opportunities in the hub.
+
+Description: Integration with the CUIC placement cell's update source.
+
+Business Value: Keeps students informed of placement activity without visiting CUIC's system separately.
+
+Acceptance Criteria:
+AC1. Given CUIC publishes a new update, when the integration syncs, then the update appears in the student feed within the defined sync interval.
+
+Dependencies: External dependency on CUIC system availability.
+Assumptions: Assumption: CUIC is willing/able to provide a feed; not confirmed.
+Technical Notes: TBD — requires technical confirmation.
+Definition of Done: Integration built and verified against test data.","[SCRUM03-F002] Announcements, Placement Updates & Study Materials Aggregator",integration scrum-03,Medium
+Story,[SCRUM03-F003-UI-001] Question paper insights screen,"Story ID: SCRUM03-F003-UI-001
+
+User Story: As a student, I want to view AI-generated insights on frequently asked topics for a subject, so that I can prioritize my study time.
+
+Description: Screen showing ranked topics/patterns per subject based on historical question paper analysis.
+
+Business Value: Helps students focus effort on high-yield topics.
+
+Acceptance Criteria:
+AC1. Given a student selects a subject, when insights are available, then ranked topics/patterns are displayed with supporting context.
+
+Dependencies: Depends on Backend AI analysis service.
+Assumptions: N/A
+Technical Notes: N/A
+Definition of Done: Screen implemented and tested with sample data.",[SCRUM03-F003] AI Study Assistant (Question Paper Analysis & Recommendations),ui scrum-03,Medium
+Story,[SCRUM03-F003-BE-001] Question paper pattern analysis service,"Story ID: SCRUM03-F003-BE-001
+
+User Story: As the insights screen, I want to request AI-analyzed patterns for a subject, so that I can display prioritized topics.
+
+Description: Backend service running analysis over stored question papers to extract recurring topics/patterns.
+
+Business Value: Core AI capability differentiating the hub.
+
+Acceptance Criteria:
+AC1. Given sufficient historical question papers exist for a subject, when analysis runs, then a ranked list of topics/patterns is produced.
+AC2. Given insufficient data exists for a subject, when analysis is requested, then the system returns a clear 'insufficient data' response rather than a fabricated result.
+
+Dependencies: Depends on Database of stored question papers.
+Assumptions: N/A
+Technical Notes: TBD — requires technical confirmation of the AI/ML approach (not specified in source document; must not be invented).
+Definition of Done: Service implemented and tested.",[SCRUM03-F003] AI Study Assistant (Question Paper Analysis & Recommendations),backend scrum-03,Medium
+Story,[SCRUM03-F003-DB-001] Historical question paper repository,"Story ID: SCRUM03-F003-DB-001
+
+User Story: As the system, I need to store historical question papers, so that the AI analysis service has data to process.
+
+Description: Data store for uploaded/collected question papers with subject, year, and file reference metadata.
+
+Business Value: Foundation for the AI Smart Question Paper Predictor.
+
+Acceptance Criteria:
+AC1. Given a question paper is added to the repository, when saved, then it is retrievable by subject and year for analysis.
+
+Dependencies: N/A
+Assumptions: Assumption: papers are sourced from seniors/admin uploads; exact source process not specified.
+Technical Notes: TBD.
+Definition of Done: Schema implemented.",[SCRUM03-F003] AI Study Assistant (Question Paper Analysis & Recommendations),database scrum-03,Medium
+Story,[SCRUM03-E2E-001] Student views up-to-date academic status pulled from source portals,"Covers Features: SCRUM03-F001
+
+Business Journey: Student logs in → hub aggregation service pulls attendance/marks/exam data from source portals → data is cached → dashboard displays current status.
+
+E2E Acceptance Criteria:
+AC1. Given a student opens the academic dashboard, when source portal data is available, then current attendance, marks, and exam data are shown, matching the source portal values.
+
+Error/Exception Path: If a source portal is unreachable, the dashboard shows the last successfully cached data with a 'last updated' indicator rather than failing outright.","[SCRUM03-F001] Academic Dashboard (Attendance, Marks, Exam Info)",e2e scrum-03,Medium
+Story,"[SCRUM03-E2E-002] Student discovers an announcement, related study material, and AI-prioritized topics","Covers Features: SCRUM03-F002, SCRUM03-F003
+
+Business Journey: Student opens unified feed → sees a new exam announcement → navigates to study materials for that subject → opens AI insights to see prioritized topics.
+
+E2E Acceptance Criteria:
+AC1. Given an announcement about an upcoming exam exists, when the student follows the flow from feed to study materials to AI insights, then all three screens present consistent, subject-matched information.
+
+Error/Exception Path: Missing study materials or insufficient AI analysis data for a subject is communicated clearly rather than shown as an empty/broken screen.","[SCRUM03-F002] Announcements, Placement Updates & Study Materials Aggregator",e2e scrum-03,Medium

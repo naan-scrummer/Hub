@@ -1,0 +1,155 @@
+Summary,Issue key,Issue id,Issue Type,Status,Project key,Project name,Project type,Project lead,Project lead id,Project description,Priority,Resolution,Assignee,Assignee Id,Reporter,Reporter Id,Creator,Creator Id,Created,Updated,Last Viewed,Resolved,Due date,Votes,Labels,Labels,Labels,Labels,Description,Environment,Watchers,Watchers Id,Original estimate,Remaining Estimate,Time Spent,Work Ratio,Σ Original Estimate,Σ Remaining Estimate,Σ Time Spent,Security Level,Custom field (Development),Custom field (Issue color),Custom field (Rank),Custom field (Start date),Custom field (Story point estimate),Custom field (Team),Custom field (Vulnerability),Custom field (Vulnerability),Status Category,Status Category Changed
+[SCRUM03-T-001] Authentication unit and integration test coverage,SCRUM-90,10319,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,10/Sep/26 10:42 PM,,,0,scrum-03,test,trainee-slot-1,,"Story ID: SCRUM03-T-001
+
+User Story: As the development team, I want authentication unit/integration coverage, so that protected access behavior is verified.
+
+Description: Test authentication state, protected resources, authorization, and secure failure handling using the project testing strategy.
+
+Business Value: Reduces regressions in a foundational feature.
+
+Acceptance Criteria:
+1. Given valid and invalid authentication scenarios, when tests run, then expected access decisions and state transitions are verified.
+2. Given protected-resource requests, when tests run, then authentication and authorization behavior is verified.
+
+Dependencies: Authentication implementation.
+Assumptions: Use test data and mocks appropriate to the selected stack.
+Technical Notes: The README defines unit and integration testing; exact framework is not specified.
+Definition of Done: Relevant unit/integration tests implemented and passing.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000fz:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-E2E-001] Assignment → Reminder → Notification end-to-end workflow,SCRUM-86,10315,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,15/Sep/26 2:12 AM,,,0,dev-slot-2,e2e,scrum-03,,"Story ID: SCRUM03-E2E-001
+
+User Story: As a student, I want creating an assignment to lead to the appropriate reminder and notification flow, so that upcoming deadlines receive attention automatically.
+
+Description: Validate the documented workflow: Student creates assignment → due date stored → reminder scheduled → reminder job detects trigger → notification generated → student receives notification.
+
+Business Value: Demonstrates one of the key integrated workflows in the README.
+
+Acceptance Criteria:
+1. Given a student creates an assignment with a due date, when the workflow progresses to the configured trigger time, then a reminder is processed and a notification becomes available to the student.
+2. Given the assignment is completed before the trigger, when reminder processing runs, then the workflow respects completion state.
+
+Dependencies: Assignments, Reminders, Notifications.
+Assumptions: Use a controlled test time/data setup.
+Technical Notes: Follow the module boundaries stated in the README rather than moving job logic into the API.
+Definition of Done: End-to-end workflow tested.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000f3:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-F011-REL-001] Reminder-to-notification workflow,SCRUM-85,10314,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,10/Sep/26 11:25 PM,,,0,dev-slot-1,e2e,scrum-03,,"Story ID: SCRUM03-F011-REL-001
+
+User Story: As the system, I want ready reminders to produce notifications, so that students are alerted at the appropriate time.
+
+Description: Implement the documented flow from Reminder processing to Notification generation.
+
+Business Value: Connects the time-sensitive reminder feature to student attention.
+
+Acceptance Criteria:
+1. Given a reminder reaches its trigger time, when reminder processing runs, then notification generation is invoked.
+2. Given notification generation succeeds, when the notification workflow completes, then the student can retrieve the resulting notification.
+
+Dependencies: Reminder processing and notification generation.
+Assumptions: Delivery channel details beyond in-app notification handling are future/implementation dependent.
+Technical Notes: Follow the README workflow: Reminder Job → Notification → Notification Job → Student.
+Definition of Done: End-to-end reminder-to-notification workflow verified.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000ev:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-F011-JOB-001] Notification background processing,SCRUM-84,10313,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,10/Sep/26 10:14 PM,,,0,backend,scrum-03,trainee-slot-2,,"Story ID: SCRUM03-F011-JOB-001
+
+User Story: As the system, I want notification-related background work handled separately from API requests, so that notification processing is decoupled from interactive requests.
+
+Description: Handle notification-related background processing through the Jobs responsibility described in the README.
+
+Business Value: Improves separation between interactive operations and background processing.
+
+Acceptance Criteria:
+1. Given a notification job is ready, when background processing runs, then notification work is processed independently of a user request.
+2. Given background notification processing encounters a failure, when handled, then the application remains stable and the failure can be addressed through the job workflow.
+
+Dependencies: Notification generation workflow.
+Assumptions: The README leaves the specific job mechanism unspecified.
+Technical Notes: Notification delivery infrastructure and job processing should remain outside domain rules.
+Definition of Done: Notification job implemented and tested.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000en:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-F011-BE-001] Notification generation workflow,SCRUM-83,10312,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,,,,0,backend,scrum-03,trainee-slot-1,,"Story ID: SCRUM03-F011-BE-001
+
+User Story: As the system, I want to generate notifications from relevant academic events, so that students are informed when attention is needed.
+
+Description: Generate notifications for assignment deadlines, reminder triggers, important announcements, and other relevant academic events.
+
+Business Value: Turns important application events into actionable student information.
+
+Acceptance Criteria:
+1. Given an event qualifies for notification, when the notification workflow processes it, then a notification record is generated with the relevant event context.
+2. Given an event does not qualify, when processed, then no irrelevant notification is generated.
+
+Dependencies: Assignments, Reminders, Announcements, and other supported event sources.
+Assumptions: The README does not define a detailed notification rules engine; implement only documented triggers.
+Technical Notes: Keep event-specific source logic outside notification delivery infrastructure.
+Definition of Done: Generation workflow implemented and tested.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000ef:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-F011-UI-001] Notifications center,SCRUM-82,10311,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,,,,0,dev-slot-8,scrum-03,ui,,"Story ID: SCRUM03-F011-UI-001
+
+User Story: As a student, I want to view notifications, so that I can see events requiring my attention.
+
+Description: Provide a student-facing notification area for upcoming assignment deadlines, reminder triggers, important announcements, and other relevant academic events.
+
+Business Value: Centralizes attention-worthy events.
+
+Acceptance Criteria:
+1. Given notifications exist, when the student opens Notifications, then relevant notifications are displayed.
+2. Given there are no notifications, when the notification area is opened, then a clear empty state is shown.
+
+Dependencies: Notification application/data service.
+Assumptions: The README does not specify advanced notification preferences.
+Technical Notes: Keep delivery infrastructure separate from notification domain behavior.
+Definition of Done: Notification center implemented and tested.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000e7:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-F010-JOB-001] Reminder background processing,SCRUM-81,10310,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,,,,0,backend,dev-slot-7,integration,scrum-03,"Story ID: SCRUM03-F010-JOB-001
+
+User Story: As the system, I want background processing to handle reminders independently of API requests, so that time-based work can occur reliably.
+
+Description: Process reminders that have reached their trigger time through background work.
+
+Business Value: Separates scheduled processing from individual client requests.
+
+Acceptance Criteria:
+1. Given a reminder is ready, when background processing runs, then the reminder is processed.
+2. Given a reminder processing attempt fails, when the job handles the failure, then it does not cause the entire application process to crash.
+
+Dependencies: Reminder persistence and notification workflow.
+Assumptions: The README specifies background processing but leaves scheduler implementation open.
+Technical Notes: Keep background job responsibilities separate from API request handling.
+Definition of Done: Reminder job behavior implemented and tested.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000dz:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-F010-BE-001] Reminder scheduling workflow,SCRUM-80,10309,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,,,,0,backend,dev-slot-6,scrum-03,,"Story ID: SCRUM03-F010-BE-001
+
+User Story: As the system, I want reminders processed at their trigger time, so that relevant notifications can be generated.
+
+Description: Implement the reminder application workflow and its handoff to background processing.
+
+Business Value: Makes time-sensitive reminders actionable without relying on an active UI request.
+
+Acceptance Criteria:
+1. Given a reminder has a trigger time, when that time is reached and processing runs, then the reminder is recognized as ready for processing.
+2. Given the reminder is linked to an assignment or other supported event, when processing runs, then the associated event context is available to downstream notification handling.
+
+Dependencies: Background job processing.
+Assumptions: The README specifies background jobs but not a specific queue/scheduler technology.
+Technical Notes: Time-based work belongs in Jobs rather than API request handling.
+Definition of Done: Reminder scheduling workflow implemented and tested.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000dr:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-F010-UI-001] Reminder management,SCRUM-79,10308,Story,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 10:07 PM,15/Sep/26 2:16 AM,,,,0,dev-slot-5,scrum-03,ui,,"Story ID: SCRUM03-F010-UI-001
+
+User Story: As a student, I want to create and view reminders, so that I can keep track of time-sensitive events.
+
+Description: Support reminders created directly by students and reminders associated with assignments, examinations, important deadlines, and other student-created events.
+
+Business Value: Helps students remember time-sensitive work.
+
+Acceptance Criteria:
+1. Given valid reminder information is entered, when it is saved, then the reminder is available for processing.
+2. Given a reminder is associated with another module entity, when that reminder is viewed, then the relationship is visible.
+
+Dependencies: Reminder application service.
+Assumptions: Exact reminder fields beyond trigger time/relationship are implementation-specific.
+Technical Notes: Avoid duplicating notification delivery logic in the reminder UI.
+Definition of Done: Reminder management implemented and tested.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i000dj:,,,,,,To Do,10/Sep/26 10:07 PM
+[SCRUM03-F011] Notifications,SCRUM-33,10096,Epic,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 9:58 PM,15/Sep/26 2:16 AM,,,,0,scrum-03,,,,"Feature: Notifications
+
+Description: Notifications that inform students about upcoming assignment deadlines, reminder triggers, important announcements, and other relevant academic events. Notification delivery and processing are separated from core domain logic.
+
+Source basis: README — Notifications.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i0003b:,,,,,,To Do,10/Sep/26 9:59 PM
+[SCRUM03-F010] Reminders,SCRUM-32,10095,Epic,To Do,SCRUM,BlackLoops,software,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,Medium,,harishrmit,712020:2653337b-0bde-48f0-8273-ea213a2a6911,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,10/Sep/26 9:58 PM,15/Sep/26 2:16 AM,,,,0,scrum-03,,,,"Feature: Reminders
+
+Description: Time-sensitive student reminders associated with assignments, examinations, important deadlines, and other student-created events. Reminders may be created directly, created by other modules, and processed by background jobs.
+
+Source basis: README — Reminders.",,Shenbagaraj Manivannan,712020:de899226-2fc8-4be6-9092-d5fd9392e7c2,,,,,,,,,,,0|i00033:,,,,,,To Do,10/Sep/26 9:58 PM
